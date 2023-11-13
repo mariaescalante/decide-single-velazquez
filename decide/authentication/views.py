@@ -1,17 +1,61 @@
+from django.http import HttpResponseRedirect
 from rest_framework.response import Response
 from rest_framework.status import (
         HTTP_201_CREATED,
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from django.views.decorators.debug import sensitive_post_parameters
+from django.contrib.auth import authenticate, login
 from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.utils.decorators import method_decorator
+from .forms import CustomUserCreationForm
 from .serializers import UserSerializer
+from .models import CustomUser
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.shortcuts import resolve_url
+from django.contrib.auth.views import LoginView
+
+@login_required
+def home(request):
+        data = {
+        'form': CustomUserCreationForm(),
+        'user': request.user}
+
+        return render(request, "home.html", data)
+
+
+class Custom_loginView(LoginView):
+
+    def form_valid(self, form):
+        # Llamamos al método form_valid de la clase base para realizar la autenticación
+        response = super().form_valid(form)
+
+
+def registro(request):
+    data = {
+        'form': CustomUserCreationForm()
+    }
+    if request.method == 'POST':
+        user_creation_form = CustomUserCreationForm(data=request.POST)
+
+        if user_creation_form.is_valid():
+            user = user_creation_form.save()
+
+            login(request, user)
+            return redirect('home')
+        else:
+            data['mensaje'] = 'Ha habido un error en el formulario'
+    return render(request, "registro.html", data)
 
 
 class GetUserView(APIView):

@@ -1,0 +1,22 @@
+<title>{% block title %}Dashboard{% endblock %}</title>
+
+{% load crispy_forms_tags %}
+{% block content %}
+
+    <div class="content-section">
+        <h1> Dashboard</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">    
+            
+                </div> 
+            </fieldset>
+            <div>
+            
+        </form>
+         {{mensaje}}
+         {{datos}}
+    </div>      
+
+  
+{% endblock content %}
