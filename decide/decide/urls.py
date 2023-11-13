@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('doc/', schema_view),
     path('gateway/', include('gateway.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
 
 for module in settings.MODULES:
