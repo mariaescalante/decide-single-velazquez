@@ -56,6 +56,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 LOGIN_REDIRECT_URL = ('/authentication/dashboard/')
 LOGOUT_REDIRECT_URL = ('/authentication/login2/')
+LOGIN_URL = '/authentication/login2/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'authentication/static'),)
 
