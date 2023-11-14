@@ -1,4 +1,6 @@
+import json
 from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
 from rest_framework.response import Response
 from rest_framework.status import (
         HTTP_201_CREATED,
@@ -17,13 +19,14 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
 from django.contrib.auth.views import LoginView
+from utils.decrypt_cert import get_cert_data_in_json
 
 @login_required
 def home(request):
@@ -97,3 +100,61 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+
+class CustomLoginView(LoginView):
+    template_name = 'custom_login.html'
+    success_url = 'home'
+
+    def get(self, request, *args, **kwargs):
+        form = CustomAuthenticationForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = CustomAuthenticationForm(request.POST, request.FILES)
+
+        try:
+            if form.is_valid():
+                # Lógica de autenticación y procesamiento de datos
+                cert_file = request.FILES.get('cert_file')  # Accede al campo directamente en request.FILES
+                password = form.cleaned_data['password']
+
+                # Accede al contenido del archivo directamente
+                cert_content = cert_file.read()
+                
+                user = None
+                
+                # Get cert data
+                cert_data = json.loads(get_cert_data_in_json(cert_content, password))
+                
+                first_name = cert_data["givenName"]
+                last_name = cert_data["surname"]
+                dni = cert_data["commonName"].split(" - ")[1]
+                
+                user = CustomUser.objects.filter(first_name=first_name, last_name=last_name).first()
+                
+                # Realiza tu lógica de autenticación y procesamiento aquí
+                # user = authenticate(request, cert_content=cert_content, password=password)
+
+                if user:
+                    # Usuario existente, actualiza last_login y otros campos si es necesario
+                    # user.last_login = last_login
+                    # Actualiza otros campos según sea necesario
+                    user.save()
+                else:
+                    # Usuario no encontrado, crea un nuevo usuario
+                    user = CustomUser.objects.create_user(username=' ', first_name=first_name, last_name=last_name)
+                    # user.last_login = last_login
+                    # Configura otros campos según sea necesario
+                    user.save()
+            # Autentica y loguea al usuario
+            authenticate(request, username=user.username)
+            login(request, user)
+
+            return redirect(self.success_url)
+        
+        except Exception as e:
+            # Maneja la excepción y agrega un mensaje de error al formulario
+            form.add_error(None, f'Error al procesar el certificado: {str(e)}')
+
+        # Manejar el caso en que el formulario no es válido
+        return render(request, self.template_name, {'form': form})
