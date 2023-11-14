@@ -1,0 +1,30 @@
+
+
+<title>{% block title %}2FA{% endblock %}</title>
+
+{% load crispy_forms_tags %}
+{% block content %}
+<body>
+    <div class="content-section">
+        <h1> Dashboard</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Activar autenticación de doble factor</legend>
+                {{ form | crispy }}
+            </fieldset>
+            <div>
+            <div class="form-group">
+                <h1>Activar Autenticación de Dos Factores (2FA)</h1>
+                <p>Escanea el siguiente código QR en tu aplicación autenticadora:</p>
+                {% load static %}
+                <img src={{camino}}/>
+               
+                <p>o ingresa la siguiente clave manualmente: {{ qr_text }}</p>
+            </div>
+        </form>
+        <button class="btn btn-outline-info" type="submit">Aceptar</button>
+        
+    </div>             
+</body>
+{% endblock content %}
