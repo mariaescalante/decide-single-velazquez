@@ -9,10 +9,24 @@ class CustomUserCreationForm(UserCreationForm):
             raise forms.ValidationError('This username is already taken. Please choose another.')
         return username
     
-    
     class Meta(UserCreationForm.Meta):
         model = CustomUser
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ('username', 'password1', 'password2')
+    
+  
+class CustomUserCreationFormEmail(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'password1', 'password2')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
