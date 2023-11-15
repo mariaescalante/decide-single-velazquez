@@ -101,8 +101,8 @@ class RegisterView(APIView):
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
 
-class CustomLoginView(LoginView):
-    template_name = 'custom_login.html'
+class CertLoginView(LoginView):
+    template_name = 'cert_login.html'
     success_url = 'home'
 
     def get(self, request, *args, **kwargs):
@@ -114,38 +114,26 @@ class CustomLoginView(LoginView):
 
         try:
             if form.is_valid():
-                # Lógica de autenticación y procesamiento de datos
-                cert_file = request.FILES.get('cert_file')  # Accede al campo directamente en request.FILES
+                cert_file = request.FILES.get('cert_file')
                 password = form.cleaned_data['password']
 
                 # Accede al contenido del archivo directamente
                 cert_content = cert_file.read()
                 
-                user = None
-                
-                # Get cert data
                 cert_data = json.loads(get_cert_data_in_json(cert_content, password))
                 
                 first_name = cert_data["givenName"]
                 last_name = cert_data["surname"]
                 dni = cert_data["commonName"].split(" - ")[1]
                 
+                # Buscamos si existe el user en la db
                 user = CustomUser.objects.filter(first_name=first_name, last_name=last_name).first()
                 
-                # Realiza tu lógica de autenticación y procesamiento aquí
-                # user = authenticate(request, cert_content=cert_content, password=password)
-
-                if user:
-                    # Usuario existente, actualiza last_login y otros campos si es necesario
-                    # user.last_login = last_login
-                    # Actualiza otros campos según sea necesario
-                    user.save()
-                else:
-                    # Usuario no encontrado, crea un nuevo usuario
-                    user = CustomUser.objects.create_user(username=' ', first_name=first_name, last_name=last_name)
-                    # user.last_login = last_login
-                    # Configura otros campos según sea necesario
-                    user.save()
+                if not user:
+                    user = CustomUser.objects.create_user(username=dni, first_name=first_name, last_name=last_name)
+                                    
+                user.save()
+                    
             # Autentica y loguea al usuario
             authenticate(request, username=user.username)
             login(request, user)

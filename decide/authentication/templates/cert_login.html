@@ -1,10 +1,10 @@
-<!-- custom_login.html -->
+<!-- cert_login.html -->
 
 {% block content %}
   {% load crispy_forms_tags %}
   <h2>Iniciar Sesión</h2>
 
-  <form method="post" enctype="multipart/form-data" class="login-form" action="{% url 'custom_login' %}">
+  <form method="post" enctype="multipart/form-data" class="login-form" action="{% url 'cert_login' %}">
     {% csrf_token %} 
     {{ form|crispy }}
     <input type="submit" value="Iniciar Sesión">
