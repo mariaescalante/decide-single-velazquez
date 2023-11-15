@@ -127,7 +127,7 @@ class CertLoginView(LoginView):
                 dni = cert_data["commonName"].split(" - ")[1]
                 
                 # Buscamos si existe el user en la db
-                user = CustomUser.objects.filter(first_name=first_name, last_name=last_name).first()
+                user = CustomUser.objects.filter(username=dni).first()
                 
                 if not user:
                     user = CustomUser.objects.create_user(username=dni, first_name=first_name, last_name=last_name)
