@@ -16,8 +16,8 @@ urlpatterns = [
     path('logout2/', logout_then_login, name="logout"),
     path('login2/', Custom_loginView.as_view(), name='login'),
 
-    path('password_reset/', CustomPasswordResetView.as_view(), name='password_reset'),
-    path('password_reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('reset/done/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('password_reset2/', CustomPasswordResetView.as_view(), name='password_reset2'),
+    path('password_reset2/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done2'),
+    path('reset2/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm2'),
+    path('reset2/done/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete2'),
 ]
