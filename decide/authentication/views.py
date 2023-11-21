@@ -5,6 +5,7 @@ from rest_framework.status import (
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+from .models import CustomUser
 from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -28,6 +29,8 @@ from django.urls import reverse
 import pyotp
 import qrcode
 import os
+from django.contrib.auth.forms import AuthenticationForm
+from decide.settings import AUTH_MAX_FAILED_LOGIN_ATTEMPTS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,8 +42,10 @@ def home(request):
 
         return render(request, "home.html", data)
 
-
+user_failed_login_attempts = 0
 class Custom_loginView(LoginView):
+
+    
     def get_success_url(self):
         user = self.request.user
 

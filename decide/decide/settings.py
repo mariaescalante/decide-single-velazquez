@@ -116,6 +116,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'decide.wsgi.application'
 
+AUTH_MAX_FAILED_LOGIN_ATTEMPTS = 5
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
