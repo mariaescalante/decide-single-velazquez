@@ -1,5 +1,6 @@
 from datetime import timezone
 import datetime
+import time
 from django import apps
 from django.db import models
 from django.contrib.auth.hashers import make_password
@@ -54,11 +55,10 @@ class CustomUser(AbstractUser):
             user: El usuario a bloquear.
         """
 
-        user.is_active = False
+        user.active = False
         user.save()
 
-        user.last_login_attempt_at = timezone.now() - datetime.timedelta(hours=1)
-        user.save()
+
         # Envía un correo electrónico al usuario notificándole que su cuenta ha sido bloqueada.
 
    ##     send_email(user, "Su cuenta ha sido bloqueada",

@@ -44,7 +44,36 @@ def home(request):
 
 user_failed_login_attempts = 0
 class Custom_loginView(LoginView):
+    def login2(request):
+        """Inicia sesión a un usuario.
 
+        Args:
+            request: La solicitud HTTP.
+
+        Returns:
+            La respuesta HTTP.
+        """
+        
+        
+        global user_failed_login_attempts
+        # ...
+
+        if request.user != 'AnonymousUser':
+            # El usuario no existe o la contraseña es incorrecta.
+            user_failed_login_attempts += 1
+            print(user_failed_login_attempts)
+            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
+            # El límite de intentos fallidos se ha alcanzado.
+                usuario = CustomUser.objects.get(username=request.POST.get("username"))
+                CustomUser.block_account(usuario)
+                return redirect("registro")
+            else:
+                return render(request, "registration/login.html", { 'form': AuthenticationForm})
+        else:
+            # El usuario ha iniciado sesión correctamente.
+            user_failed_login_attempts = 0
+            login(request, request.user)
+            return redirect("home")
     
     def get_success_url(self):
         user = self.request.user
