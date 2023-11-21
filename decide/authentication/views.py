@@ -29,6 +29,7 @@ from django.urls import reverse
 import pyotp
 import qrcode
 import os
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.forms import AuthenticationForm
 from decide.settings import AUTH_MAX_FAILED_LOGIN_ATTEMPTS
 
@@ -58,7 +59,9 @@ class Custom_loginView(LoginView):
         global user_failed_login_attempts
         # ...
 
-        if request.user != 'AnonymousUser':
+        usuario = CustomUser.objects.get(username=request.POST.get("username"))
+
+        if not check_password(request.POST.get("password"), usuario.password):
             # El usuario no existe o la contraseña es incorrecta.
             user_failed_login_attempts += 1
             print(user_failed_login_attempts)
@@ -72,7 +75,7 @@ class Custom_loginView(LoginView):
         else:
             # El usuario ha iniciado sesión correctamente.
             user_failed_login_attempts = 0
-            login(request, request.user)
+            login(request, usuario)
             return redirect("home")
     
     def get_success_url(self):
