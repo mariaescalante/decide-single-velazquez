@@ -160,3 +160,11 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+    
+@login_required
+def cuenta(request):
+    user = request.user
+    data = {
+        'user': user
+    }
+    return render(request, "cuenta.html", data)

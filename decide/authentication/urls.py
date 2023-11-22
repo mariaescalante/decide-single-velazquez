@@ -16,6 +16,6 @@ urlpatterns = [
     path('logout2/', logout_then_login, name="logout"),
     path('login2/', Custom_loginView.as_view(), name='login'),
     path('registerEmail/', registroEmail, name="registroEmail"),
-
+    path('cuenta/', cuenta, name='cuenta')
 
 ]
