@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
-from django.contrib.auth.models import User
+from .models import CustomUser
 from rest_framework.authtoken.models import Token
 
 from base import mods
@@ -13,11 +13,11 @@ class AuthTestCase(APITestCase):
     def setUp(self):
         self.client = APIClient()
         mods.mock_query(self.client)
-        u = User(username='voter1')
+        u = CustomUser(username='voter1')
         u.set_password('123')
         u.save()
 
-        u2 = User(username='admin')
+        u2 = CustomUser(username='admin')
         u2.set_password('admin')
         u2.is_superuser = True
         u2.save()
