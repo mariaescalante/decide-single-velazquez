@@ -58,25 +58,26 @@ class Custom_loginView(LoginView):
         
         global user_failed_login_attempts
         # ...
+        if request.POST :
+            usuario = CustomUser.objects.get(username=request.POST.get("username"))
 
-        usuario = CustomUser.objects.get(username=request.POST.get("username"))
-
-        if not check_password(request.POST.get("password"), usuario.password):
-            # El usuario no existe o la contraseña es incorrecta.
-            user_failed_login_attempts += 1
-            print(user_failed_login_attempts)
-            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
-            # El límite de intentos fallidos se ha alcanzado.
-                usuario = CustomUser.objects.get(username=request.POST.get("username"))
-                CustomUser.block_account(usuario)
-                return redirect("registro")
+            if not check_password(request.POST.get("password"), usuario.password):
+                # El usuario no existe o la contraseña es incorrecta.
+                user_failed_login_attempts += 1
+                print(user_failed_login_attempts)
+                if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
+                # El límite de intentos fallidos se ha alcanzado.
+                    usuario = CustomUser.objects.get(username=request.POST.get("username"))
+                    CustomUser.block_account(usuario)
+                    return redirect("registro")
+                else:
+                    return render(request, "registration/login.html", { 'form': AuthenticationForm})
             else:
-                return render(request, "registration/login.html", { 'form': AuthenticationForm})
-        else:
-            # El usuario ha iniciado sesión correctamente.
-            user_failed_login_attempts = 0
-            login(request, usuario)
-            return redirect("home")
+                # El usuario ha iniciado sesión correctamente.
+                user_failed_login_attempts = 0
+                login(request, usuario)
+                return redirect("home")
+        return render(request, "registration/login.html", { 'form': AuthenticationForm})
     
     def get_success_url(self):
         user = self.request.user
