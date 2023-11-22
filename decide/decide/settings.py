@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'crispy_forms',
+    'crispy_bootstrap5',
+
     'corsheaders',
     'django_filters',
     'rest_framework',
@@ -45,6 +48,17 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'gateway',
 ]
+
+AUTH_USER_MODEL = 'authentication.CustomUser'
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+LOGIN_REDIRECT_URL = ('/authentication/dashboard/')
+LOGOUT_REDIRECT_URL = ('/authentication/login2/')
+LOGIN_URL = '/authentication/login2/'
+
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'authentication/static'),)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -177,6 +191,7 @@ if os.path.exists("config.jsonnet"):
     config = json.loads(evaluate_file("config.jsonnet"))
     for k, v in config.items():
         vars()[k] = v
+
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
