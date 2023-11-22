@@ -17,7 +17,7 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm, CustomUserCreationFormEmail
+from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, EditarPerfilForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
@@ -168,3 +168,22 @@ def cuenta(request):
         'user': user
     }
     return render(request, "cuenta.html", data)
+
+@login_required
+def editar_perfil(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = EditarPerfilForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('cuenta')
+    else:
+        form = EditarPerfilForm(instance=user)
+
+    data = {
+        'form': form,
+        'user': user
+    }
+    return render(request, "editar_perfil.html", data)
+
