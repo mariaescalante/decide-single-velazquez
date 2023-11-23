@@ -2,7 +2,7 @@ import random
 import itertools
 from django.utils import timezone
 from django.conf import settings
-from django.contrib.auth.models import User
+from authentication.models import CustomUser
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -57,14 +57,14 @@ class VotingTestCase(BaseTestCase):
 
     def create_voters(self, v):
         for i in range(100):
-            u, _ = User.objects.get_or_create(username='testvoter{}'.format(i))
+            u, _ = CustomUser.objects.get_or_create(username='testvoter{}'.format(i))
             u.is_active = True
             u.save()
             c = Census(voter_id=u.id, voting_id=v.id)
             c.save()
 
     def get_or_create_user(self, pk):
-        user, _ = User.objects.get_or_create(pk=pk)
+        user, _ = CustomUser.objects.get_or_create(pk=pk)
         user.username = 'user{}'.format(pk)
         user.set_password('qwerty')
         user.save()
