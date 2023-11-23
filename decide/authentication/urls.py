@@ -15,7 +15,7 @@ urlpatterns = [
     path('segunda/<int:user_id>/', comprobarqr, name='comprobarqr'),
     path('logout2/', logout_then_login, name="logout"),
     path('login2/', Custom_loginView.as_view(), name='login'),
-    path('registerEmail/', registroEmail, name="registroEmail"),
+    path('register_email/', registro_email, name="registro_email"),
 
 
 ]
