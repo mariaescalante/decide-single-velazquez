@@ -17,7 +17,7 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, CustomUserCreationFormEmail
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
@@ -70,6 +70,23 @@ def registro(request):
         else:
             data['mensaje'] = 'Ha habido un error en el formulario'
     return render(request, "registro.html", data)
+
+def registroEmail(request):
+    data = {
+        'form': CustomUserCreationFormEmail()
+    }
+    if request.method == 'POST':
+        user_creation_form = CustomUserCreationFormEmail(data=request.POST)
+
+        if user_creation_form.is_valid():
+            user = user_creation_form.save()
+
+            login(request, user)
+            return redirect('home')
+        else:
+            data['mensaje'] = 'Ha habido un error en el formulario'
+    return render(request, "registroEmail.html", data)
+
 
 def comprobarqr(request, user_id):
     if(request.method == 'POST'):
