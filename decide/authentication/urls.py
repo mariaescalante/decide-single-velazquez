@@ -18,5 +18,8 @@ urlpatterns = [
     path('login2/', Custom_loginView.as_view(), name='login'),
     path('registerEmail/', registroEmail, name="registroEmail"),
 
-
+    path('password_reset2/', CustomPasswordResetView.as_view(), name='password_reset2'),
+    path('password_reset2/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done2'),
+    path('reset2/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm2'),
+    path('reset2/done/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete2'),
 ]
