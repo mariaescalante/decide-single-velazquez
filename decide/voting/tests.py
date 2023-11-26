@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+import uuid
 
 from base import mods
 from base.tests import BaseTestCase
@@ -54,14 +55,18 @@ class VotingTestCase(BaseTestCase):
         v.auths.add(a)
 
         return v
+    
 
+    
     def create_voters(self, v):
         for i in range(100):
-            u, _ = CustomUser.objects.get_or_create(username='testvoter{}'.format(i))
-            u.is_active = True
-            u.save()
-            c = Census(voter_id=u.id, voting_id=v.id)
-            c.save()
+            if not CustomUser.objects.filter(pk=i).exists():
+                u = CustomUser(pk=i, is_active=True, username='testvoter{}'.format(i))
+                u.save()
+                c = Census(voter_id=u.id, voting_id=v.id)
+                c.save()
+            
+
 
     def get_or_create_user(self, pk):
         user, _ = CustomUser.objects.get_or_create(pk=pk)
