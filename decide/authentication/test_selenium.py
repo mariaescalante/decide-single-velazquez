@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
-from authentication.tests import AuthTestCase
+from base.tests import BaseTestCase
 import time
 
 from selenium import webdriver
@@ -14,8 +14,8 @@ class AdminTestCase(StaticLiveServerTestCase):
 
     def setUp(self):
         # Crea un usuario admin y otro no admin
-        self.auth = AuthTestCase()
-        self.auth.setUp()
+        self.base = BaseTestCase()
+        self.base.setUp()
 
         # Opciones de Chrome
         options = webdriver.ChromeOptions()
@@ -28,7 +28,7 @@ class AdminTestCase(StaticLiveServerTestCase):
         super().tearDown()
         self.driver.quit()
 
-        self.auth.tearDown()
+        self.base.tearDown()
 
     def test_simpleCorrectLogin(self):
         # Abre la ruta del navegador
