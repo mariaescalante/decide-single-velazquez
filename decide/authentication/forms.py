@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from .models import CustomUser
 
 class CustomUserCreationForm(UserCreationForm):
@@ -33,3 +33,9 @@ class CustomUserCreationFormEmail(UserCreationForm):
         if CustomUser.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('This email is already taken. Please choose another.')
         return email
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        return cleaned_data

@@ -17,18 +17,21 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm, CustomUserCreationFormEmail
+from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
-from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse, reverse_lazy
 import pyotp
 import qrcode
 import os
 from django.conf import settings
+from django.utils import timezone
+from django.contrib import messages
+from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -45,12 +48,18 @@ class Custom_loginView(LoginView):
     def get_success_url(self):
         user = self.request.user
 
-        # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
             user_id = self.request.user.id
             success_url = reverse('comprobarqr', kwargs={'user_id': user_id})
             logout(self.request)
             return success_url 
+        
+        last_change = user.last_password_change
+        last_change = last_change.astimezone(timezone.get_current_timezone()) if last_change else None
+
+        X = timedelta(minutes=5)
+        if last_change and (timezone.now() - last_change) >= X:
+            return reverse('password_change2')
 
         return super().get_success_url()
    
@@ -176,3 +185,19 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
+
+class CustomPasswordChangeView(PasswordChangeView):
+    form_class = CustomPasswordChangeForm
+    template_name = 'password_change_form.html'
+    success_url = reverse_lazy('password_change_success2')
+
+    def form_valid(self, form):
+        user = self.request.user
+        user.last_password_change = timezone.now()
+        user.save()
+
+        return super().form_valid(form)
+
+class CustomPasswordChangeDoneView(PasswordChangeDoneView):
+    template_name = 'password_change_success.html'
+
