@@ -71,7 +71,7 @@ def registro(request):
             data['mensaje'] = 'Ha habido un error en el formulario'
     return render(request, "registro.html", data)
 
-def registroEmail(request):
+def registro_email(request):
     data = {
         'form': CustomUserCreationFormEmail()
     }
@@ -85,7 +85,7 @@ def registroEmail(request):
             return redirect('home')
         else:
             data['mensaje'] = 'Ha habido un error en el formulario'
-    return render(request, "registroEmail.html", data)
+    return render(request, "registro_email.html", data)
 
 
 def comprobarqr(request, user_id):
