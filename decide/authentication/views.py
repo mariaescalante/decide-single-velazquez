@@ -17,17 +17,18 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, CustomUserCreationFormEmail
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
-from django.contrib.auth.views import LoginView
-from django.urls import reverse
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.urls import reverse, reverse_lazy
 import pyotp
 import qrcode
 import os
+from django.conf import settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -69,6 +70,23 @@ def registro(request):
         else:
             data['mensaje'] = 'Ha habido un error en el formulario'
     return render(request, "registro.html", data)
+
+def registroEmail(request):
+    data = {
+        'form': CustomUserCreationFormEmail()
+    }
+    if request.method == 'POST':
+        user_creation_form = CustomUserCreationFormEmail(data=request.POST)
+
+        if user_creation_form.is_valid():
+            user = user_creation_form.save()
+
+            login(request, user)
+            return redirect('home')
+        else:
+            data['mensaje'] = 'Ha habido un error en el formulario'
+    return render(request, "registroEmail.html", data)
+
 
 def comprobarqr(request, user_id):
     if(request.method == 'POST'):
@@ -143,3 +161,18 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'password_reset_form.html'
+    email_template_name = 'password_reset_email.html'
+    success_url = reverse_lazy('password_reset_done2')
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete2')
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'password_reset_complete.html'

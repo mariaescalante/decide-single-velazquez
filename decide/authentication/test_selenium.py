@@ -18,45 +18,44 @@ class AdminTestCase(StaticLiveServerTestCase):
 
 
     def setUp(self):
-        #Crea un usuario admin y otro no admin
+        # Crea un usuario admin y otro no admin
         self.base = BaseTestCase()
         self.base.setUp()
 	
         #Opciones de Chrome
-        
+
 
         options = webdriver.ChromeOptions()
         options.headless = False #Necesario
         options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
         self.driver = webdriver.Chrome(options=options)
 
-        super().setUp()            
-            
-    def tearDown(self):           
+        super().setUp()
+
+    def tearDown(self):
         super().tearDown()
         self.driver.quit()
 
         self.base.tearDown()
-    
-    def test_simpleCorrectLogin(self):      
-       #Abre la ruta del navegador             
+
+    def test_simpleCorrectLogin(self):
+        # Abre la ruta del navegador
         self.driver.get(f'{self.live_server_url}/admin/')
-       #Busca los elementos y “escribe”
-        self.driver.find_element(By.ID,'id_username').send_keys("admin")
-        self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        
-       #Verifica que nos hemos logado porque aparece la barra de herramientas superior
-        self.assertTrue(len(self.driver.find_elements(By.ID, 'user-tools'))==1)
-        
+        # Busca los elementos y “escribe”
+        self.driver.find_element(By.ID, 'id_username').send_keys("admin")
+        self.driver.find_element(By.ID, 'id_password').send_keys("qwerty", Keys.ENTER)
+
+        # Verifica que nos hemos logado porque aparece la barra de herramientas superior
+        self.assertTrue(len(self.driver.find_elements(By.ID, 'user-tools')) == 1)
+
     def test_simpleWrongLogin(self):
-
         self.driver.get(f'{self.live_server_url}/admin/')
-        self.driver.find_element(By.ID,'id_username').send_keys("WRONG")
-        self.driver.find_element(By.ID,'id_password').send_keys("WRONG")       
-        self.driver.find_element(By.ID,'login-form').submit()
+        self.driver.find_element(By.ID, 'id_username').send_keys("WRONG")
+        self.driver.find_element(By.ID, 'id_password').send_keys("WRONG")
+        self.driver.find_element(By.ID, 'login-form').submit()
 
-       #Si no, aparece este error
-        self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME,'errornote'))==1)
+        # Si no, aparece este error
+        self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, 'errornote')) == 1)
         time.sleep(5)
 
     def test_multifactor_Correct(self):
@@ -156,3 +155,4 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
         self.driver.find_element(By.ID, 'codigo').send_keys("fhasjñfas", Keys.ENTER)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
+
