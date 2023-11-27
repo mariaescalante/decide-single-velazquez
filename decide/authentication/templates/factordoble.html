@@ -20,10 +20,10 @@
                 {% load static %}
                 <img src={{camino}}/>
                
-                <p>o ingresa la siguiente clave manualmente: {{ qr_text }}</p>
+                <p>o ingresa la siguiente clave manualmente: </p><p id="codigo" >{{ qr_text }}</p>
             </div>
         </form>
-        <button class="btn btn-outline-info" type="submit">Aceptar</button>
+        <button id="aceptar" class="btn btn-outline-info" type="submit">Aceptar</button>
         
     </div>             
 </body>
