@@ -25,6 +25,7 @@ class AdminTestCase(StaticLiveServerTestCase):
 	
         #Opciones de Chrome
 
+
         if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
             os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))
             
@@ -206,4 +207,6 @@ class AdminTestCase(StaticLiveServerTestCase):
         time.sleep(1)
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
+        self.driver.find_element(By.ID, 'codigo').send_keys("fhasjñfas", Keys.ENTER)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
+
