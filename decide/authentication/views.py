@@ -75,7 +75,6 @@ def comprobarqr(request, user_id):
         user = CustomUser.objects.get(pk=user_id)
         codigo = request.POST.get('codigo', None)
         totp_object = pyotp.TOTP(user.secret)
-        print(totp_object.now())
         
         if(totp_object.verify(codigo)):
             login(request, user)
