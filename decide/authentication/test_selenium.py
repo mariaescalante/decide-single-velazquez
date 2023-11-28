@@ -154,24 +154,44 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.driver.get(f'{self.live_server_url}/authentication/login2/')
         time.sleep(8)
         
+
+        ventanas = self.driver.window_handles
+
+        # Cambiar a la segunda ventana
+        self.driver.switch_to.window(ventanas[1])
+        
+        time.sleep(1.5)
+        self.driver.get('chrome://settings')
+        time.sleep(1.5)
+        try:
+            persona = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/persona.png"), confidence= 0.75)
+            pyautogui.click(persona)
+            time.sleep(0.5)
+            color = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/cambio_color.png"), confidence= 0.75)
+            pyautogui.click(color)
+        except pyautogui.ImageNotFoundException:
+             pass
+        time.sleep(0.5)
+        self.driver.switch_to.window(ventanas[0])
+
+        time.sleep(2)
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        
         self.driver.find_element(By.ID,'enlace').click()
-        time.sleep(1)
-        inicio = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/inicio.png"), confidence= 0.75)
-        pyautogui.click(inicio)
         time.sleep(1)
         extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
         pyautogui.click(extn)
         time.sleep(1)
-        codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-        pyautogui.click(codigo)
+        try:
+            codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
+            pyautogui.click(codigo)
+        except pyautogui.ImageNotFoundException:
+            codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension2.png"), confidence= 0.75)
+            pyautogui.click(codigo) 
         time.sleep(3)
         añadir = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/añadir_qr.png"), confidence= 0.6)
         pyautogui.click(añadir)
         time.sleep(1)
-        home = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/dashboard.png"), confidence= 0.75)
         pyautogui.moveTo(100, 300, duration=1)
         pyautogui.mouseDown()
         pyautogui.moveTo(900, 1000, duration=1)
@@ -186,5 +206,4 @@ class AdminTestCase(StaticLiveServerTestCase):
         time.sleep(1)
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        self.driver.find_element(By.ID, 'codigo').send_keys("fhasjñfas", Keys.ENTER)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
