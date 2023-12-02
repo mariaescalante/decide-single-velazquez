@@ -210,3 +210,44 @@ class AuthTestCase(APITestCase):
         X = timedelta(minutes=10080)  # 7 dias
         return last_change and (timezone.now() - last_change) >= X
 
+    def test_registro_email_success(self):
+        data = {
+            'email': 'rafaeldgarciagalocha@gmail.com',
+            'password1': 'decidepass123',
+            'password2': 'decidepass123'
+        }
+        response = self.client.post('/authentication/register_email/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        user_created = CustomUser.objects.filter(email='rafaeldgarciagalocha@gmail.com').exists()
+        self.assertTrue(user_created)
+
+    def test_registro_email_failure(self):
+        data = {
+            'email': 'email',
+            'password1': 'pass123',
+            'password2': 'pass123'
+        }
+        response = self.client.post('/authentication/register_email/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ha habido un error en el formulario')
+
+    def test_registro_email_already_taken(self):
+        data = {
+            'email': 'rafaeldgarciagalocha@gmail.com',
+            'password1': 'decidepass123',
+            'password2': 'decidepass123'
+        }
+        data2 = {
+            'email': 'rafaeldgarciagalocha@gmail.com',
+            'password1': 'decidepass123',
+            'password2': 'decidepass123'
+        }
+        response = self.client.post('/authentication/register_email/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        user_created = CustomUser.objects.filter(email='rafaeldgarciagalocha@gmail.com').exists()
+        self.assertTrue(user_created)
+
+        response = self.client.post('/authentication/register_email/', data2, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ha habido un error en el formulario')
+
