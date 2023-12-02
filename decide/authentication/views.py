@@ -10,14 +10,14 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 from django.views.decorators.debug import sensitive_post_parameters
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm
+from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
@@ -57,7 +57,7 @@ class Custom_loginView(LoginView):
         last_change = user.last_password_change
         last_change = last_change.astimezone(timezone.get_current_timezone()) if last_change else None
 
-        X = timedelta(minutes=5)
+        X = timedelta(minutes=10080) # 7 dias
         if last_change and (timezone.now() - last_change) >= X:
             return reverse('password_change2')
 
@@ -182,6 +182,7 @@ class CustomPasswordResetDoneView(PasswordResetDoneView):
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'password_reset_confirm.html'
     success_url = reverse_lazy('password_reset_complete2')
+    form_class = CustomResetPasswordForm
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
