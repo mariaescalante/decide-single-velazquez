@@ -137,16 +137,23 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'authentication.validators.CustomUserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ('username', 'email'),
+            'max_similarity': 0.7,
+        },
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'authentication.validators.CustomMinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        },
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'authentication.validators.CustomCommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'authentication.validators.CustomNumericPasswordValidator',
     },
 ]
 
@@ -172,6 +179,9 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 STATIC_URL = '/static/'
 
+# Para el desarrollo (verlo en consola):
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Backend de Gmail en lugar del de la consola
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -181,7 +191,6 @@ EMAIL_HOST_USER = 'decidevelazquez@gmail.com'
 EMAIL_HOST_PASSWORD = 'ibab blmy ccow hltx'
 DEFAULT_FROM_EMAIL = 'decidevelazquez@gmail.com'
 SERVER_EMAIL = 'decidevelazquez@gmail.com'
-
 
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
