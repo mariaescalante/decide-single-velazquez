@@ -1,6 +1,6 @@
 import datetime
 import random
-from django.contrib.auth.models import User
+from authentication.models import CustomUser
 from django.utils import timezone
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -39,10 +39,13 @@ class StoreTextCase(BaseTestCase):
         voting.save()
 
     def get_or_create_user(self, pk):
-        user, _ = User.objects.get_or_create(pk=pk)
-        user.username = 'user{}'.format(pk)
-        user.set_password('qwerty')
-        user.save()
+        if not CustomUser.objects.filter(pk=pk).exists():
+            user = CustomUser(pk=pk)
+            user.username = 'user{}'.format(pk)
+            user.set_password('qwerty')
+            user.save()
+        else:
+            user = CustomUser.objects.get(pk=pk)
         return user
 
     def gen_votes(self):
