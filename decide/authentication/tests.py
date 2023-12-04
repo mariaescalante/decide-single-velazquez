@@ -2,136 +2,53 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
-from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from base import mods
+from authentication.models import CustomUser
+from django.urls import reverse
 
-
-class AuthTestCase(APITestCase):
+class AuthTestCase(TestCase):
 
     def setUp(self):
-        self.client = APIClient()
-        mods.mock_query(self.client)
-        u = User(username='voter1')
-        u.set_password('123')
-        u.save()
+        self.user = CustomUser.objects.create(username='testuser', password='12345')
+        self.user.save()
+        
+    def authenticate_user(self):
+        self.client.force_login(self.user)
 
-        u2 = User(username='admin')
-        u2.set_password('admin')
-        u2.is_superuser = True
-        u2.save()
-
-    def tearDown(self):
-        self.client = None
-
-    def test_login(self):
-        data = {'username': 'voter1', 'password': '123'}
-        response = self.client.post('/authentication/login/', data, format='json')
+    def test_editar_perfil_GET_restringido(self):
+        response = self.client.get(reverse('editar_perfil'))
+        self.assertRedirects(response, '/authentication/login2/?next=/authentication/cuenta/editar_perfil/')
+ 
+    def test_editar_perfil_GET_autorizado(self):
+        self.authenticate_user()
+        
+        response = self.client.get(reverse('editar_perfil'))
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'form')
 
-        token = response.json()
-        self.assertTrue(token.get('token'))
+    def test_editar_perfil(self):
+        self.authenticate_user()
 
-    def test_login_fail(self):
-        data = {'username': 'voter1', 'password': '321'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 400)
+        url = reverse('editar_perfil')
+        
+        success_url = reverse('cuenta')
+        
+        nuevos_datos = {
+            'username':'testuser',
+            'first_name': 'Nuevo',
+            'last_name': 'Usuario',
+            'email': 'nuevo_usuario@example.com',
+        }
 
-    def test_getuser(self):
-        data = {'username': 'voter1', 'password': '123'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        token = response.json()
+        response = self.client.post(url, nuevos_datos)
+        
+        self.assertRedirects(response, success_url)
 
-        response = self.client.post('/authentication/getuser/', token, format='json')
-        self.assertEqual(response.status_code, 200)
-
-        user = response.json()
-        self.assertEqual(user['id'], 1)
-        self.assertEqual(user['username'], 'voter1')
-
-    def test_getuser_invented_token(self):
-        token = {'token': 'invented'}
-        response = self.client.post('/authentication/getuser/', token, format='json')
-        self.assertEqual(response.status_code, 404)
-
-    def test_getuser_invalid_token(self):
-        data = {'username': 'voter1', 'password': '123'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Token.objects.filter(user__username='voter1').count(), 1)
-
-        token = response.json()
-        self.assertTrue(token.get('token'))
-
-        response = self.client.post('/authentication/logout/', token, format='json')
-        self.assertEqual(response.status_code, 200)
-
-        response = self.client.post('/authentication/getuser/', token, format='json')
-        self.assertEqual(response.status_code, 404)
-
-    def test_logout(self):
-        data = {'username': 'voter1', 'password': '123'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Token.objects.filter(user__username='voter1').count(), 1)
-
-        token = response.json()
-        self.assertTrue(token.get('token'))
-
-        response = self.client.post('/authentication/logout/', token, format='json')
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(Token.objects.filter(user__username='voter1').count(), 0)
-
-    def test_register_bad_permissions(self):
-        data = {'username': 'voter1', 'password': '123'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        token = response.json()
-
-        token.update({'username': 'user1'})
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 401)
-
-    def test_register_bad_request(self):
-        data = {'username': 'admin', 'password': 'admin'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        token = response.json()
-
-        token.update({'username': 'user1'})
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 400)
-
-    def test_register_user_already_exist(self):
-        data = {'username': 'admin', 'password': 'admin'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        token = response.json()
-
-        token.update(data)
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 400)
-
-    def test_register(self):
-        data = {'username': 'admin', 'password': 'admin'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        token = response.json()
-
-        token.update({'username': 'user1', 'password': 'pwd1'})
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            sorted(list(response.json().keys())),
-            ['token', 'user_pk']
-        )
-
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
+        self.assertEqual(response.status_code, 302)
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, nuevos_datos['first_name'])
+        self.assertEqual(self.user.last_name, nuevos_datos['last_name'])
+        self.assertEqual(self.user.email, nuevos_datos['email'])
