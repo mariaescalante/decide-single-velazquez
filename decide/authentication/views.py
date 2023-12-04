@@ -60,23 +60,24 @@ class Custom_loginView(LoginView):
         # ...
         if request.POST :
             usuario = CustomUser.objects.get(username=request.POST.get("username"))
-
-            if not check_password(request.POST.get("password"), usuario.password):
-                # El usuario no existe o la contraseña es incorrecta.
-                user_failed_login_attempts += 1
-                print(user_failed_login_attempts)
-                if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
+            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
                 # El límite de intentos fallidos se ha alcanzado.
-                    usuario = CustomUser.objects.get(username=request.POST.get("username"))
-                    CustomUser.block_account(usuario)
-                    return redirect("registro")
-                else:
-                    return render(request, "registration/login.html", { 'form': AuthenticationForm})
+                
+                usuario = CustomUser.objects.get(username=request.POST.get("username"))
+                CustomUser.block_account(usuario)
+                return redirect("registro")
             else:
-                # El usuario ha iniciado sesión correctamente.
-                user_failed_login_attempts = 0
-                login(request, usuario)
-                return redirect("home")
+                # El usuario no existe o la contraseña es incorrecta.
+                if not check_password(request.POST.get("password"), usuario.password):
+                    user_failed_login_attempts += 1
+                    return render(request, "registration/login.html", { 'form': AuthenticationForm})
+                else:
+                    # El usuario ha iniciado sesión correctamente.
+                    user_failed_login_attempts = 0
+                    login(request, usuario)
+                    return redirect("home")
+            
+                
         return render(request, "registration/login.html", { 'form': AuthenticationForm})
     
     def get_success_url(self):
@@ -130,7 +131,6 @@ def comprobarqr(request, user_id):
         user = CustomUser.objects.get(pk=user_id)
         codigo = request.POST.get('codigo', None)
         totp_object = pyotp.TOTP(user.secret)
-        print(totp_object.now())
         
         if(totp_object.verify(codigo)):
             login(request, user)
