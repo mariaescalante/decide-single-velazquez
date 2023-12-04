@@ -33,3 +33,22 @@ class CustomUserCreationFormEmail(UserCreationForm):
         if CustomUser.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('This email is already taken. Please choose another.')
         return email
+
+class EditarPerfilForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'email', 'username']
+        labels = {
+            'first_name': 'Nombre',
+            'last_name': 'Apellido',
+            'email': 'Email',
+            'username':'Nombre de Usuario'
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+
+        if not email or '@' not in email:
+            raise forms.ValidationError("Por favor, introduce un email válido.")
+        
+        return email

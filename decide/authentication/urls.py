@@ -16,8 +16,9 @@ urlpatterns = [
     path('segunda/<int:user_id>/', comprobarqr, name='comprobarqr'),
     path('logout2/', logout_then_login, name="logout"),
     path('login2/', Custom_loginView.as_view(), name='login'),
+    path('cuenta/', cuenta, name='cuenta'),
+    path('cuenta/editar_perfil/', editar_perfil, name='editar_perfil')
     path('register_email/', registro_email, name="registro_email"),
-
     path('password_reset2/', CustomPasswordResetView.as_view(), name='password_reset2'),
     path('password_reset2/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done2'),
     path('reset2/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm2'),
