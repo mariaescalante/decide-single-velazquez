@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - master
+      - feature/workflow
 
 jobs:
   build:
@@ -34,6 +35,10 @@ jobs:
         python-version: ${{matrix.pyversion}}
     - name: psycopg2 prerequisites
       run: sudo apt-get install libpq-dev
+    - name: dependencies for selenium
+      run: |
+        sudo apt-get install python3-tk
+        sudo apt-get install gnome-screenshot
     - name: Install dependencies and config
       run: |
         python -m pip install --upgrade pip
@@ -49,9 +54,5 @@ jobs:
         cd decide
         coverage run --branch --source=. ./manage.py test  --keepdb 
         coverage xml 
-    - name: Codacy Coverage Reporter
-      uses: codacy/codacy-coverage-reporter-action@v1
-      with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: decide/coverage.xml
+
 
