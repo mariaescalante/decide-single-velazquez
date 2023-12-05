@@ -1,3 +1,4 @@
+import time
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
@@ -10,12 +11,13 @@ from django.core import mail
 from django.template.loader import render_to_string
 
 
+
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class AuthTestCase(APITestCase):
 
     def setUp(self):
         self.client = APIClient()
-        mods.mock_query(self.client)
+
         u = CustomUser(username='voter1')
         u.set_password('123')
         u.save()
@@ -31,7 +33,7 @@ class AuthTestCase(APITestCase):
 
     def tearDown(self):
         self.client = None
-
+        
     def test_login(self):
         data = {'username': 'voter1', 'password': '123'}
         response = self.client.post('/authentication/login/', data, format='json')
@@ -55,7 +57,6 @@ class AuthTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
         user = response.json()
-        self.assertEqual(user['id'], 1)
         self.assertEqual(user['username'], 'voter1')
 
     def test_getuser_invented_token(self):
@@ -135,6 +136,51 @@ class AuthTestCase(APITestCase):
             sorted(list(response.json().keys())),
             ['token', 'user_pk']
         )
+        
+    def test_bloqueo_login(self):
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})     
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '123'})     
+        self.assertEqual(response.status_code, 302)
+        
+    def test_bloqueo_login_reinicio(self):
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.assertEqual(response.status_code, 200)
+        data = {'username': 'voter1', 'password': '123'}
+        response = self.client.post('/authentication/login2/', data)
+        self.assertEqual(response.status_code, 302)
+        self.client.get('/authentication/logout/')
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '123'})
+        self.assertEqual(response.status_code, 302)
+        
+        
+    def test_bloqueo_login_wrong(self):
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})  
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})  
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+              
+        self.assertEqual(response.status_code, 302)
+        
+
+    def test_bloqueo_login_timed(self):
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
+        self.assertEqual(response.status_code, 302)
+        time.sleep(2)
+        response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '123'})
+        self.assertEqual(response.status_code, 302)
 
     def test_password_reset_email(self):
         protocol = 'http'

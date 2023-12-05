@@ -5,6 +5,7 @@ from rest_framework.status import (
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+from .models import CustomUser
 from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -28,6 +29,9 @@ from django.urls import reverse, reverse_lazy
 import pyotp
 import qrcode
 import os
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.forms import AuthenticationForm
+from decide.settings import AUTH_MAX_FAILED_LOGIN_ATTEMPTS
 from django.conf import settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,8 +44,43 @@ def home(request):
 
         return render(request, "home.html", data)
 
-
+user_failed_login_attempts = 0
 class Custom_loginView(LoginView):
+    def login2(request):
+        """Inicia sesión a un usuario.
+
+        Args:
+            request: La solicitud HTTP.
+
+        Returns:
+            La respuesta HTTP.
+        """
+        
+        
+        global user_failed_login_attempts
+        # ...
+        if request.POST :
+            usuario = CustomUser.objects.get(username=request.POST.get("username"))
+            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
+                # El límite de intentos fallidos se ha alcanzado.
+                
+                usuario = CustomUser.objects.get(username=request.POST.get("username"))
+                CustomUser.block_account(usuario)
+                return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
+            else:
+                # El usuario no existe o la contraseña es incorrecta.
+                if not check_password(request.POST.get("password"), usuario.password):
+                    user_failed_login_attempts += 1
+                    return render(request, "registration/login.html", { 'form': AuthenticationForm})
+                else:
+                    # El usuario ha iniciado sesión correctamente.
+                    user_failed_login_attempts = 0
+                    login(request, usuario)
+                    return redirect("home")
+            
+                
+        return render(request, "registration/login.html", { 'form': AuthenticationForm})
+    
     def get_success_url(self):
         user = self.request.user
 
