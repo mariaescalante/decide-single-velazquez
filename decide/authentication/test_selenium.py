@@ -37,14 +37,14 @@ class AdminTestCase(StaticLiveServerTestCase):
         if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
             os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))        
         options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
-
         desired_cap = {
         'browser': 'Chrome',
         'browser_version': 'latest',
-        'os': 'Linux',
-        'os_version': 'Ubuntu',
+        'os': 'Windows',
+        'os_version': '10',
         'resolution': '1920x1080',
-        'name': 'Ejemplo de prueba en BrowserStack'
+        'name': 'Ejemplo de prueba en BrowserStack',
+        'url': 'http://localhost:8000',  # Update this URL
     }
 
         options.set_capability('bstack:options', desired_cap)
@@ -67,7 +67,7 @@ class AdminTestCase(StaticLiveServerTestCase):
 
     def test_simpleCorrectLogin(self):
         # Abre la ruta del navegador
-        self.driver.get(f'http://localhost:8099/admin/')
+        self.driver.get(f'http://localhost:8000/admin/')
         # Busca los elementos y “escribe”
         self.driver.find_element(By.ID, 'id_username').send_keys("admin")
         self.driver.find_element(By.ID, 'id_password').send_keys("qwerty", Keys.ENTER)
@@ -76,7 +76,7 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.assertTrue(len(self.driver.find_elements(By.ID, 'user-tools')) == 1)
 
     def test_simpleWrongLogin(self):
-        self.driver.get(f'http://localhost:8099/admin/')
+        self.driver.get(f'http://localhost:8000/admin/')
         self.driver.find_element(By.ID, 'id_username').send_keys("WRONG")
         self.driver.find_element(By.ID, 'id_password').send_keys("WRONG")
         self.driver.find_element(By.ID, 'login-form').submit()
@@ -87,7 +87,7 @@ class AdminTestCase(StaticLiveServerTestCase):
 
     def test_multifactor_Correct(self):
         
-        self.driver.get(f'http://localhost:8099/authentication/login2/')
+        self.driver.get(f'http://localhost:8000/authentication/login2/')
         time.sleep(8)
         
 
@@ -172,7 +172,7 @@ class AdminTestCase(StaticLiveServerTestCase):
                 
         
     def test_multifactor_wrong(self):
-        self.driver.get(f'http://localhost:8099/authentication/login2/')
+        self.driver.get(f'http://localhost:8000/authentication/login2/')
         time.sleep(8)
         
 
