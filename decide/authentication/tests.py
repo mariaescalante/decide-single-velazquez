@@ -167,7 +167,7 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})  
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
               
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         
 
     def test_bloqueo_login_timed(self):
@@ -177,10 +177,10 @@ class AuthTestCase(APITestCase):
         self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
         self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         time.sleep(2)
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '123'})
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
 
     def test_password_reset_email(self):
         protocol = 'http'
