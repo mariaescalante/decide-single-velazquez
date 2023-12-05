@@ -48,6 +48,7 @@ def home(request):
         return render(request, "home.html", data)
 
 user_failed_login_attempts = 0
+usernames = []
 class Custom_loginView(LoginView):
     def login2(request):
         """Inicia sesión a un usuario.
@@ -61,10 +62,13 @@ class Custom_loginView(LoginView):
         
         
         global user_failed_login_attempts
+        global usernames
         # ...
+        
         if request.POST :
             usuario = CustomUser.objects.get(username=request.POST.get("username"))
-            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS:
+            
+            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
                 # El límite de intentos fallidos se ha alcanzado.
                 
                 usuario = CustomUser.objects.get(username=request.POST.get("username"))
@@ -72,13 +76,21 @@ class Custom_loginView(LoginView):
                 return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
             else:
                 # El usuario no existe o la contraseña es incorrecta.
-                if not check_password(request.POST.get("password"), usuario.password):
+                if(not check_password(request.POST.get("password"), usuario.password) and usuario.username in usernames):
+                    user_failed_login_attempts += 1
+                    return render(request, "registration/login.html", { 'form': AuthenticationForm})
+                
+                elif not check_password(request.POST.get("password"), usuario.password):
+                    usernames.append(usuario.username)
+                    user_failed_login_attempts = 0
                     user_failed_login_attempts += 1
                     return render(request, "registration/login.html", { 'form': AuthenticationForm})
                 else:
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
+                    if(usuario.secret != None): 
+                        return redirect("comprobarqr", usuario.id)
                     return redirect("home")
             
                 

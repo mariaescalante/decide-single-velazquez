@@ -169,7 +169,6 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})  
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})  
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '56342523'})
-              
         self.assertEqual(response.status_code, 200)
         
 
