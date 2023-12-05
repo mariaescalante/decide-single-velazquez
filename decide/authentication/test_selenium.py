@@ -29,11 +29,9 @@ class AdminTestCase(StaticLiveServerTestCase):
             os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))
             
         options = webdriver.ChromeOptions()
-        options.add_experimental_option("prefs", {"toolbar.theme.color": "dark"})
         options.headless = True  #Necesario
         
 
-        options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
         self.driver = webdriver.Chrome(options=options)
 
         super().setUp()
