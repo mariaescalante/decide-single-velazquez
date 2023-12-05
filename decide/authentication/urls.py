@@ -15,7 +15,7 @@ urlpatterns = [
     path('2fa/<int:user_id>/', dobleautenticacion),
     path('segunda/<int:user_id>/', comprobarqr, name='comprobarqr'),
     path('logout2/', logout_then_login, name="logout"),
-    path('login2/', Custom_loginView.as_view(), name='login'),
+    path('login2/', Custom_loginView.login2, name='login2'),
     path('cuenta/', cuenta, name='cuenta'),
     path('cuenta/editar_perfil/', editar_perfil, name='editar_perfil'),
     path('register_email/', registro_email, name="registro_email"),
