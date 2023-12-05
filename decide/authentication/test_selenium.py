@@ -14,12 +14,11 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 class AdminTestCase(StaticLiveServerTestCase):
 
 
     def setUp(self):
- # Crea un usuario admin y otro no admin
+        # Crea un usuario admin y otro no admin
         self.base = BaseTestCase()
         self.base.setUp()
 	
@@ -31,7 +30,8 @@ class AdminTestCase(StaticLiveServerTestCase):
             
         options = webdriver.ChromeOptions()
         options.add_experimental_option("prefs", {"toolbar.theme.color": "dark"})
-        options.headless = True         
+        options.headless = False #Necesario
+        
 
         options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
         self.driver = webdriver.Chrome(options=options)
@@ -46,7 +46,7 @@ class AdminTestCase(StaticLiveServerTestCase):
 
     def test_simpleCorrectLogin(self):
         # Abre la ruta del navegador
-        self.driver.get(f'http://localhost:8000/admin/')
+        self.driver.get(f'{self.live_server_url}/admin/')
         # Busca los elementos y “escribe”
         self.driver.find_element(By.ID, 'id_username').send_keys("admin")
         self.driver.find_element(By.ID, 'id_password').send_keys("qwerty", Keys.ENTER)
@@ -55,7 +55,7 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.assertTrue(len(self.driver.find_elements(By.ID, 'user-tools')) == 1)
 
     def test_simpleWrongLogin(self):
-        self.driver.get(f'http://localhost:8000/admin/')
+        self.driver.get(f'{self.live_server_url}/admin/')
         self.driver.find_element(By.ID, 'id_username').send_keys("WRONG")
         self.driver.find_element(By.ID, 'id_password').send_keys("WRONG")
         self.driver.find_element(By.ID, 'login-form').submit()
