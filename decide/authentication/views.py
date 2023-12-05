@@ -64,7 +64,6 @@ class Custom_loginView(LoginView):
         
         if request.POST :
             usuario = CustomUser.objects.get(username=request.POST.get("username"))
-            print(user_failed_login_attempts)
             
             if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
                 # El límite de intentos fallidos se ha alcanzado.
@@ -80,7 +79,6 @@ class Custom_loginView(LoginView):
                 
                 elif not check_password(request.POST.get("password"), usuario.password):
                     usernames.append(usuario.username)
-                    print(usernames)
                     user_failed_login_attempts = 0
                     user_failed_login_attempts += 1
                     return render(request, "registration/login.html", { 'form': AuthenticationForm})
