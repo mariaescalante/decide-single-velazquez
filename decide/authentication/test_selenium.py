@@ -11,9 +11,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 import os
+import subprocess
+import os
+
+subprocess.check_call(['pip', 'install', 'pyautogui'])
 import pyautogui
 
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class AdminTestCase(StaticLiveServerTestCase):
 
