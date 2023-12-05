@@ -1,12 +1,10 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
-
-from .models import CustomUser
-from rest_framework.authtoken.models import Token
-
-from base import mods
+from authentication.models import CustomUser
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
+from base import mods
 from django.test import override_settings
 from django.core import mail
 from django.template.loader import render_to_string
