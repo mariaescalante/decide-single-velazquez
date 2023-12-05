@@ -13,8 +13,6 @@ from selenium.webdriver.chrome.service import Service
 import os
 import subprocess
 import os
-
-subprocess.check_call(['pip', 'install', 'pyautogui'])
 import pyautogui
 from pyvirtualdisplay import Display
 
