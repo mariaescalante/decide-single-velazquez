@@ -66,7 +66,7 @@ class Custom_loginView(LoginView):
                 
                 usuario = CustomUser.objects.get(username=request.POST.get("username"))
                 CustomUser.block_account(usuario)
-                return redirect("registro")
+                return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
             else:
                 # El usuario no existe o la contraseña es incorrecta.
                 if not check_password(request.POST.get("password"), usuario.password):
