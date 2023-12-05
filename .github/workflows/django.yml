@@ -39,6 +39,7 @@ jobs:
       run: |
         sudo apt-get install python3-tk
         sudo apt-get install gnome-screenshot
+        sudo apt-get install -y chromium-browser
     - name: Install dependencies and config
       run: |
         python -m pip install --upgrade pip
