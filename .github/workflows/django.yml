@@ -66,7 +66,11 @@ jobs:
         cd decide
         coverage run --branch --source=. ./manage.py test  --keepdb 
         coverage xml 
-
+    - name: Install Xvfb
+      run: sudo apt-get install -y xvfb
+    
+    - name: Run with virtual display
+      run: xvfb-run python script.py
     - name: Stop BrowserStack
       uses: browserstack/github-actions/setup-local@master
       with:

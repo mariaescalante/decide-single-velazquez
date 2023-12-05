@@ -15,7 +15,6 @@ import subprocess
 import os
 
 subprocess.check_call(['pip', 'install', 'pyautogui'])
-import pyautogui
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,9 +29,9 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.base = BaseTestCase()
         self.base.setUp()
 	
-        #Opciones de Chrome
+        #Opciones de Chrome 
 
-        options = webdriver.ChromeOptions()
+        options = Options()
         options.headless = False #Necesario
         if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
             os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))        
@@ -64,6 +63,7 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.driver.quit()
 
         self.base.tearDown()
+    import pyautogui
 
     def test_simpleCorrectLogin(self):
         # Abre la ruta del navegador
