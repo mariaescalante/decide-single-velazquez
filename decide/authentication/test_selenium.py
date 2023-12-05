@@ -19,38 +19,25 @@ class AdminTestCase(StaticLiveServerTestCase):
 
 
     def setUp(self):
-        # Crea un usuario admin y otro no admin
+ # Crea un usuario admin y otro no admin
         self.base = BaseTestCase()
         self.base.setUp()
-    
+	
         #Opciones de Chrome
 
-        options = webdriver.ChromeOptions()
-        options.headless = False #Necesario
+
         if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
-            os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))        
+            os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))
+            
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option("prefs", {"toolbar.theme.color": "dark"})
+        options.headless = False #Necesario
+        
+
         options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
-        desired_cap = {
-        'browser': 'Chrome',
-        'browser_version': 'latest',
-        'os': 'Windows',
-        'os_version': '10',
-        'resolution': '1920x1080',
-        'name': 'Ejemplo de prueba en BrowserStack',
-        'url': 'http://localhost:8000',  # Update this URL
-    }
-
-        options.set_capability('bstack:options', desired_cap)
-        
-
-        self.driver = webdriver.Remote(
-        command_executor='https://alejandrogarca_1LS0NP:ZUMcNpmcRBkQ5QrPPvyx@hub-cloud.browserstack.com/wd/hub',
-        desired_capabilities=desired_cap
-    )
-        
+        self.driver = webdriver.Chrome(options=options)
 
         super().setUp()
-
 
     def tearDown(self):
         super().tearDown()
