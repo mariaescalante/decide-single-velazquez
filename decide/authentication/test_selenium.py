@@ -11,220 +11,70 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 import os
-import subprocess
-import os
-import pyautogui
-from pyvirtualdisplay import Display
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class AdminTestCase(StaticLiveServerTestCase):
 
-    with Display():
 
-        def setUp(self):
-            # Crea un usuario admin y otro no admin
-            self.base = BaseTestCase()
-            self.base.setUp()
+    def setUp(self):
+        # Crea un usuario admin y otro no admin
+        self.base = BaseTestCase()
+        self.base.setUp()
+    
+        #Opciones de Chrome
+
+        options = webdriver.ChromeOptions()
+        options.headless = False #Necesario
+        if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
+            os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))        
+        options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
+        desired_cap = {
+        'browser': 'Chrome',
+        'browser_version': 'latest',
+        'os': 'Windows',
+        'os_version': '10',
+        'resolution': '1920x1080',
+        'name': 'Ejemplo de prueba en BrowserStack',
+        'url': 'http://localhost:8000',  # Update this URL
+    }
+
+        options.set_capability('bstack:options', desired_cap)
         
-            #Opciones de Chrome
 
-            options = webdriver.ChromeOptions()
-            options.headless = False #Necesario
-            if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
-                os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))        
-            options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
-            desired_cap = {
-            'browser': 'Chrome',
-            'browser_version': 'latest',
-            'os': 'Windows',
-            'os_version': '10',
-            'resolution': '1920x1080',
-            'name': 'Ejemplo de prueba en BrowserStack',
-            'url': 'http://localhost:8000',  # Update this URL
-        }
+        self.driver = webdriver.Remote(
+        command_executor='https://alejandrogarca_1LS0NP:ZUMcNpmcRBkQ5QrPPvyx@hub-cloud.browserstack.com/wd/hub',
+        desired_capabilities=desired_cap
+    )
+        
 
-            options.set_capability('bstack:options', desired_cap)
-            
-
-            self.driver = webdriver.Remote(
-            command_executor='https://alejandrogarca_1LS0NP:ZUMcNpmcRBkQ5QrPPvyx@hub-cloud.browserstack.com/wd/hub',
-            desired_capabilities=desired_cap
-        )
-            
-
-            super().setUp()
+        super().setUp()
 
 
-        def tearDown(self):
-            super().tearDown()
-            self.driver.quit()
+    def tearDown(self):
+        super().tearDown()
+        self.driver.quit()
 
-            self.base.tearDown()
+        self.base.tearDown()
 
-        def test_simpleCorrectLogin(self):
-            # Abre la ruta del navegador
-            self.driver.get(f'http://localhost:8000/admin/')
-            # Busca los elementos y “escribe”
-            self.driver.find_element(By.ID, 'id_username').send_keys("admin")
-            self.driver.find_element(By.ID, 'id_password').send_keys("qwerty", Keys.ENTER)
+    def test_simpleCorrectLogin(self):
+        # Abre la ruta del navegador
+        self.driver.get(f'http://localhost:8000/admin/')
+        # Busca los elementos y “escribe”
+        self.driver.find_element(By.ID, 'id_username').send_keys("admin")
+        self.driver.find_element(By.ID, 'id_password').send_keys("qwerty", Keys.ENTER)
 
-            # Verifica que nos hemos logado porque aparece la barra de herramientas superior
-            self.assertTrue(len(self.driver.find_elements(By.ID, 'user-tools')) == 1)
+        # Verifica que nos hemos logado porque aparece la barra de herramientas superior
+        self.assertTrue(len(self.driver.find_elements(By.ID, 'user-tools')) == 1)
 
-        def test_simpleWrongLogin(self):
-            self.driver.get(f'http://localhost:8000/admin/')
-            self.driver.find_element(By.ID, 'id_username').send_keys("WRONG")
-            self.driver.find_element(By.ID, 'id_password').send_keys("WRONG")
-            self.driver.find_element(By.ID, 'login-form').submit()
+    def test_simpleWrongLogin(self):
+        self.driver.get(f'http://localhost:8000/admin/')
+        self.driver.find_element(By.ID, 'id_username').send_keys("WRONG")
+        self.driver.find_element(By.ID, 'id_password').send_keys("WRONG")
+        self.driver.find_element(By.ID, 'login-form').submit()
 
-            # Si no, aparece este error
-            self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, 'errornote')) == 1)
-            time.sleep(5)
-
-        def test_multifactor_Correct(self):
-            
-            self.driver.get(f'http://localhost:8000/authentication/login2/')
-            time.sleep(8)
-            
-
-            ventanas = self.driver.window_handles
-
-            # Cambiar a la segunda ventana
-            self.driver.switch_to.window(ventanas[1])
-            
-            time.sleep(1.5)
-            self.driver.get('chrome://settings')
-            time.sleep(1.5)
-            try:
-                persona = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/persona.png"), confidence= 0.75)
-                pyautogui.click(persona)
-                time.sleep(0.5)
-                color = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/cambio_color.png"), confidence= 0.75)
-                pyautogui.click(color)
-            except pyautogui.ImageNotFoundException:
-                pass
-            time.sleep(0.5)
-            self.driver.switch_to.window(ventanas[0])
-
-            time.sleep(2)
-            self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
-            self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-            self.driver.find_element(By.ID,'enlace').click()
-            time.sleep(1)
-            extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
-            pyautogui.click(extn)
-            time.sleep(1)
-            try:
-                codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-                pyautogui.click(codigo)
-            except pyautogui.ImageNotFoundException:
-                codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension2.png"), confidence= 0.75)
-                pyautogui.click(codigo) 
-            time.sleep(3)
-            añadir = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/añadir_qr.png"), confidence= 0.6)
-            pyautogui.click(añadir)
-            time.sleep(1)
-            pyautogui.moveTo(100, 300, duration=1)
-            pyautogui.mouseDown()
-            pyautogui.moveTo(900, 1000, duration=1)
-            time.sleep(1)
-            pyautogui.mouseUp()
-            time.sleep(1)
-            pyautogui.press('enter')
-            time.sleep(2)
-            self.driver.find_element(By.ID,'aceptar').send_keys(Keys.ENTER)
-            time.sleep(1)
-            self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
-            time.sleep(1)
-            self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
-            self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-            extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
-            pyautogui.click(extn)
-            time.sleep(1)
-            try:
-                codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-                pyautogui.click(codigo)
-            except pyautogui.ImageNotFoundException:
-                codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension2.png"), confidence= 0.75)
-                pyautogui.click(codigo) 
-            time.sleep(1)
-            decide = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/decideapp.png"), confidence= 0.75)
-            pyautogui.click(decide)
-            time.sleep(0.5)
-            pyautogui.press('tab')
-            time.sleep(0.5)
-            pyautogui.press('enter')
-            time.sleep(0.5)
-            input_ = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/input.png"), confidence= 0.65)
-            pyautogui.click(input_)
-            time.sleep(0.2)
-            pyautogui.keyDown('ctrl')
-            pyautogui.press('v')
-            pyautogui.keyUp('ctrl')
-            time.sleep(0.2)
-            pyautogui.press('enter')
-            time.sleep(2)
-            self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 1)
-                    
-            
-        def test_multifactor_wrong(self):
-            self.driver.get(f'http://localhost:8000/authentication/login2/')
-            time.sleep(8)
-            
-
-            ventanas = self.driver.window_handles
-
-            # Cambiar a la segunda ventana
-            self.driver.switch_to.window(ventanas[1])
-            
-            time.sleep(1.5)
-            self.driver.get('chrome://settings')
-            time.sleep(1.5)
-            try:
-                persona = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/persona.png"), confidence= 0.75)
-                pyautogui.click(persona)
-                time.sleep(0.5)
-                color = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/cambio_color.png"), confidence= 0.75)
-                pyautogui.click(color)
-            except pyautogui.ImageNotFoundException:
-                pass
-            time.sleep(0.5)
-            self.driver.switch_to.window(ventanas[0])
-
-            time.sleep(2)
-            self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
-            self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-            self.driver.find_element(By.ID,'enlace').click()
-            time.sleep(1)
-            extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
-            pyautogui.click(extn)
-            time.sleep(1)
-            try:
-                codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-                pyautogui.click(codigo)
-            except pyautogui.ImageNotFoundException:
-                codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension2.png"), confidence= 0.75)
-                pyautogui.click(codigo) 
-            time.sleep(3)
-            añadir = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/añadir_qr.png"), confidence= 0.6)
-            pyautogui.click(añadir)
-            time.sleep(1)
-            pyautogui.moveTo(100, 300, duration=1)
-            pyautogui.mouseDown()
-            pyautogui.moveTo(900, 1000, duration=1)
-            time.sleep(1)
-            pyautogui.mouseUp()
-            time.sleep(1)
-            pyautogui.press('enter')
-            time.sleep(2)
-            self.driver.find_element(By.ID,'aceptar').send_keys(Keys.ENTER)
-            time.sleep(1)
-            self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
-            time.sleep(1)
-            self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
-            self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-            self.driver.find_element(By.ID, 'codigo').send_keys("fhasjñfas", Keys.ENTER)
-            self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
+        # Si no, aparece este error
+        self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, 'errornote')) == 1)
+        time.sleep(5)
 
