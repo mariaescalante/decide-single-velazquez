@@ -1,6 +1,7 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, SetPasswordForm
 from .models import CustomUser
+from django.utils import timezone
 
 class CustomUserCreationForm(UserCreationForm):
     def clean_username(self):
@@ -34,6 +35,20 @@ class CustomUserCreationFormEmail(UserCreationForm):
             raise forms.ValidationError('This email is already taken. Please choose another.')
         return email
 
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        return cleaned_data
+    
+class CustomResetPasswordForm(SetPasswordForm):
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.last_password_change = timezone.now()
+        if commit:
+            user.save()
+        return user
+
 class EditarPerfilForm(forms.ModelForm):
     class Meta:
         model = CustomUser
@@ -52,3 +67,4 @@ class EditarPerfilForm(forms.ModelForm):
             raise forms.ValidationError("Por favor, introduce un email válido.")
         
         return email
+

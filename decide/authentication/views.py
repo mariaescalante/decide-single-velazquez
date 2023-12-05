@@ -11,20 +11,20 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 from django.views.decorators.debug import sensitive_post_parameters
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, EditarPerfilForm
+from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm, EditarPerfilForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
-from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse, reverse_lazy
 import pyotp
 import qrcode
@@ -33,6 +33,9 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth.forms import AuthenticationForm
 from decide.settings import AUTH_MAX_FAILED_LOGIN_ATTEMPTS
 from django.conf import settings
+from django.utils import timezone
+from django.contrib import messages
+from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -84,12 +87,18 @@ class Custom_loginView(LoginView):
     def get_success_url(self):
         user = self.request.user
 
-        # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
             user_id = self.request.user.id
             success_url = reverse('comprobarqr', kwargs={'user_id': user_id})
             logout(self.request)
             return success_url 
+        
+        last_change = user.last_password_change
+        last_change = last_change.astimezone(timezone.get_current_timezone()) if last_change else None
+
+        X = timedelta(minutes=10080) # 7 dias
+        if last_change and (timezone.now() - last_change) >= X:
+            return reverse('password_change2')
 
         return super().get_success_url()
    
@@ -238,6 +247,23 @@ class CustomPasswordResetDoneView(PasswordResetDoneView):
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'password_reset_confirm.html'
     success_url = reverse_lazy('password_reset_complete2')
+    form_class = CustomResetPasswordForm
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
+
+class CustomPasswordChangeView(PasswordChangeView):
+    form_class = CustomPasswordChangeForm
+    template_name = 'password_change_form.html'
+    success_url = reverse_lazy('password_change_success2')
+
+    def form_valid(self, form):
+        user = self.request.user
+        user.last_password_change = timezone.now()
+        user.save()
+
+        return super().form_valid(form)
+
+class CustomPasswordChangeDoneView(PasswordChangeDoneView):
+    template_name = 'password_change_success.html'
+

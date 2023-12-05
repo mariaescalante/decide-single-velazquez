@@ -9,6 +9,8 @@ from base import mods
 from django.test import override_settings
 from django.core import mail
 from django.template.loader import render_to_string
+from datetime import timedelta
+from django.utils import timezone
 
 
 
@@ -29,6 +31,7 @@ class AuthTestCase(APITestCase):
 
         u3 = CustomUser(username='rafaeldavidgg', email='rafaeldgarciagalocha@gmail.com')
         u3.set_password('decidepass123')
+        u3.last_password_change = timezone.now()
         u3.save()
 
     def tearDown(self):
@@ -224,6 +227,32 @@ class AuthTestCase(APITestCase):
         self.assertEqual(sent_mail.to, recipient_list)
         self.assertIn(expected_text, sent_mail.body)
 
+    def test_password_change_required(self):
+        data = {'username': 'rafaeldavidgg', 'password': 'decidepass123'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        user = CustomUser.objects.get(username='rafaeldavidgg')
+        user.last_password_change -= timedelta(days=10)
+        user.save()
+
+        response = self.client.post('/authentication/logout2/')
+        self.assertEqual(response.status_code, 302)
+
+        data = {'username': 'rafaeldavidgg', 'password': 'decidepass123'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.should_change_password(user))
+
+        user.last_password_change = timezone.now()
+        user.save()
+
+    def should_change_password(self, user):
+        last_change = user.last_password_change
+        last_change = last_change.astimezone(timezone.get_current_timezone()) if last_change else None
+
+        X = timedelta(minutes=10080)  # 7 dias
+        return last_change and (timezone.now() - last_change) >= X
 
     def test_registro_email_success(self):
         data = {
@@ -265,3 +294,4 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/register_email/', data2, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
+
