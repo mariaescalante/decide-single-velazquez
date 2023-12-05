@@ -30,7 +30,7 @@ class AdminTestCase(StaticLiveServerTestCase):
             
         options = webdriver.ChromeOptions()
         options.add_experimental_option("prefs", {"toolbar.theme.color": "dark"})
-        options.headless = False #Necesario
+        options.headless = True  #Necesario
         
 
         options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
