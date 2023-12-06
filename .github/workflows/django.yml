@@ -61,7 +61,7 @@ jobs:
     - name: Run tests
       run: |
         cd decide
-        coverage run --branch --source=. ./manage.py test authentication/test_selenium.py --keepdb 
+        coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
 
 

@@ -11,6 +11,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 import os
+import pyotp
+from authentication.models import CustomUser
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -62,3 +64,34 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, 'errornote')) == 1)
         time.sleep(5)
 
+    def test_multifactor_Correct(self):
+        
+        self.driver.get(f'{self.live_server_url}/authentication/login2/')
+        self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
+        self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
+        self.driver.find_element(By.ID,'enlace').click()
+        self.driver.find_element(By.ID,'aceptar').send_keys(Keys.ENTER)
+        self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
+        self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
+        self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
+        usuario = CustomUser.objects.get(username="noadmin")
+        totp_object = pyotp.TOTP(usuario.secret)
+        totp_object.now()
+        self.driver.find_element(By.ID,'codigo').send_keys(totp_object.now(), Keys.ENTER)
+        time.sleep(2)
+        self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 1)
+                
+    def test_multifactor_wrong(self):
+        self.driver.get(f'{self.live_server_url}/authentication/login2/')
+        self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
+        self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
+        self.driver.find_element(By.ID,'enlace').click()
+        self.driver.find_element(By.ID,'aceptar').send_keys(Keys.ENTER)
+        self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
+        self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
+        self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
+        self.driver.find_element(By.ID,'codigo').send_keys(totp_object.now(), Keys.ENTER)
+        time.sleep(2)
+        self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
+        self.assertTrue(len(self.driver.find_elements(By.ID, 'codigo')) == 1)
+        
