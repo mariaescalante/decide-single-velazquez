@@ -94,6 +94,7 @@ class Custom_loginView(LoginView):
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
+                    send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
                     if(usuario.secret != None): 
                         return redirect("comprobarqr", usuario.id)
                     return redirect("home")
@@ -105,7 +106,6 @@ class Custom_loginView(LoginView):
         user = self.request.user
 
         
-        send_email_login_notification(self.request, 'email_notificacion.html', 'Nuevo inicio de sesión')
         
         # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
