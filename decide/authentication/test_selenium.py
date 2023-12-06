@@ -90,7 +90,7 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        self.driver.find_element(By.ID,'codigo').send_keys(totp_object.now(), Keys.ENTER)
+        self.driver.find_element(By.ID,'codigo').send_keys("codigomal", Keys.ENTER)
         time.sleep(2)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'codigo')) == 1)
