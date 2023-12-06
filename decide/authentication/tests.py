@@ -1,5 +1,8 @@
+from datetime import datetime
 import time
+from django.http import HttpRequest
 from django.test import TestCase
+import pytz
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 from authentication.models import CustomUser
@@ -11,6 +14,9 @@ from django.core import mail
 from django.template.loader import render_to_string
 from datetime import timedelta
 from django.utils import timezone
+
+from utils.datetimes import get_datetime_now_formatted
+from utils.email import send_email_login_notification
 
 
 
@@ -294,3 +300,74 @@ class AuthTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
 
+class DateFormattingTestCase(TestCase):
+        
+    def setUp(self):
+        self.fecha_hora_utc = datetime.utcnow()
+        self.fecha_hora_utc = pytz.utc.localize(self.fecha_hora_utc)
+        self.zona_horaria_local_correcta = pytz.timezone('Europe/Madrid')
+        self.fecha_hora_local_correcta = self.fecha_hora_utc.astimezone(self.zona_horaria_local_correcta)
+
+    def test_positive_get_datetime_now_formatted(self):
+        resultado = get_datetime_now_formatted()
+
+        formato_deseado = "%B %d at %I:%M %p"
+        fecha_formateada_esperada = self.fecha_hora_local_correcta.strftime(formato_deseado)
+
+        self.assertEqual(resultado, fecha_formateada_esperada)
+
+    def test_negative_get_datetime_now_formatted(self):
+        resultado = get_datetime_now_formatted()
+
+        formato_deseado_incorrecto = "%Y-%m-%d %H:%M:%S"
+        fecha_formateada_esperada_incorrecta = self.fecha_hora_utc.strftime(formato_deseado_incorrecto)
+
+        self.assertNotEqual(resultado, fecha_formateada_esperada_incorrecta)
+
+
+class TestEmailNotification(TestCase):
+    
+    def setUp(self):
+        self.user = CustomUser(username='testuser', email='testuser@example.com')
+        self.user.set_password('qwerty')
+        self.user.save()
+        
+    def test_send_email_on_login_notification(self):
+        response = self.client.post(reverse('login2'), {'username': self.user.username, 'password': 'qwerty'})
+        print(reverse('login2'))
+        # Verifica que se haya enviado el correo electrónico
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Nuevo inicio de sesión')
+
+
+    def test_send_email_notification(self):
+
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.META['HTTP_USER_AGENT'] = user_agent
+        request.user = self.user
+
+        template = 'email_notificacion.html'
+        subject = 'Asunto del Correo'
+        send_email_login_notification(request, template, subject)
+
+        # Se envia a un solo correo
+        self.assertEqual(len(mail.outbox), 1)
+
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.subject, subject)
+        self.assertEqual(sent_email.from_email, 'decidevelazquez@gmail.com')
+        self.assertEqual(sent_email.to, [self.user.email])
+
+        expected_context = {
+            'nombre': self.user.username,
+            'direccion_ip': '127.0.0.1',
+            'agente_usuario': user_agent,
+            'fecha_actual': get_datetime_now_formatted(),
+        }
+        
+        expected_html_message = render_to_string(template, expected_context)
+        self.assertEqual(sent_email.alternatives[0][0], expected_html_message)
+    
