@@ -1,4 +1,6 @@
+import json
 from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
 from rest_framework.response import Response
 from rest_framework.status import (
         HTTP_201_CREATED,
@@ -18,12 +20,15 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm, EditarPerfilForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
+from django.contrib.auth.views import LoginView
+from utils.decrypt_cert import get_cert_data_in_json
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse, reverse_lazy
 import pyotp
@@ -43,6 +48,7 @@ from utils.email import send_email_login_notification
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 @login_required
 def home(request):
@@ -229,6 +235,48 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+
+
+class CertLoginView(LoginView):
+    template_name = 'cert_login.html'
+    success_url = 'home'
+
+    def get(self, request, *args, **kwargs):
+        form = CustomAuthenticationForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = CustomAuthenticationForm(request.POST, request.FILES)
+
+        try:
+            if form.is_valid():
+                cert_file = request.FILES.get('cert_file')
+                password = form.cleaned_data['password']
+
+                cert_content = cert_file.read()
+                
+                cert_data = json.loads(get_cert_data_in_json(cert_content, password))
+                
+                first_name = cert_data["givenName"]
+                last_name = cert_data["surname"]
+                dni = cert_data["commonName"].split(" - ")[1]
+                
+                user = CustomUser.objects.filter(username=dni).first()
+                
+                if not user:
+                    user = CustomUser.objects.create_user(username=dni, first_name=first_name, last_name=last_name)
+                                    
+                user.save()
+                    
+            authenticate(request, username=user.username)
+            login(request, user)
+
+            return redirect(self.success_url)
+        
+        except Exception as e:
+            form.add_error(None, f'Error al procesar el certificado: {str(e)}')
+
+        return render(request, self.template_name, {'form': form})
     
 @login_required
 def cuenta(request):
@@ -287,4 +335,3 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'password_change_success.html'
-

@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, SetPasswordForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, SetPasswordForm, AuthenticationForm
 from .models import CustomUser
 from django.utils import timezone
 
@@ -33,7 +33,11 @@ class CustomUserCreationFormEmail(UserCreationForm):
         email = self.cleaned_data.get('email')
         if CustomUser.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('This email is already taken. Please choose another.')
-        return email
+        return email  
+
+class CustomAuthenticationForm(forms.Form):
+    cert_file = forms.FileField(label='Certificado')
+    password = forms.CharField(label='Contraseña', widget=forms.PasswordInput, required=True)
 
 class CustomPasswordChangeForm(PasswordChangeForm):
     def clean(self):

@@ -1,10 +1,12 @@
+from django.test import Client, TestCase
 from datetime import datetime
-import time
 from django.http import HttpRequest
-from django.test import TestCase
 import pytz
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+import time
 from authentication.models import CustomUser
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
@@ -18,6 +20,10 @@ from django.utils import timezone
 from utils.datetimes import get_datetime_now_formatted
 from utils.email import send_email_login_notification
 
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from authentication.forms import CustomAuthenticationForm
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -300,6 +306,59 @@ class AuthTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
 
+class CertLoginViewTest(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user_model = get_user_model()
+        self.url = reverse('cert_login')
+        self.cert_path = 'decide/authentication/test_data/secreto001.p12'
+        self.cert_name = 'secreto001.p12'
+        
+    def test_cert_login_view_get(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cert_login.html')
+        self.assertIsInstance(response.context['form'], CustomAuthenticationForm)
+
+    def test_cert_login_view_success(self):
+
+        with open(self.cert_path, 'rb') as file:
+            cert_file = SimpleUploadedFile(self.cert_name, file.read())
+        
+        data = {
+            'cert_file': cert_file,
+            'password': 'secreto001',
+        }
+
+        response = self.client.post(self.url, data, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse('home'))
+
+        user = self.user_model.objects.filter(username='00000000A').first()
+        self.assertIsNotNone(user)
+        self.assertTrue(user.is_authenticated)
+
+    def test_cert_login_view_error(self):
+
+        with open(self.cert_path, 'rb') as file:
+            cert_file = SimpleUploadedFile(self.cert_name, file.read())
+        
+        data = {
+            'cert_file': cert_file,
+            'password': 'tu_password_erroneo',
+        }
+
+        response = self.client.post(self.url, data, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Error al procesar el certificado')
+
+        user = self.user_model.objects.filter(username='00000000A').first()
+        self.assertIsNone(user)
+        
 class DateFormattingTestCase(TestCase):
         
     def setUp(self):
@@ -370,4 +429,4 @@ class TestEmailNotification(TestCase):
         
         expected_html_message = render_to_string(template, expected_context)
         self.assertEqual(sent_email.alternatives[0][0], expected_html_message)
-    
+  
