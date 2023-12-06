@@ -14,3 +14,7 @@ pynose==1.4.8
 crispy-bootstrap5
 django-crispy-forms
 cryptography
+pyotp
+qrcode
+pyautogui
+opencv-python
