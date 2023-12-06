@@ -193,7 +193,6 @@ EMAIL_HOST_PASSWORD = 'ibab blmy ccow hltx'
 DEFAULT_FROM_EMAIL = 'decidevelazquez@gmail.com'
 SERVER_EMAIL = 'decidevelazquez@gmail.com'
 
-
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
 

@@ -36,6 +36,11 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib import messages
 from datetime import timedelta
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from utils.datetimes import get_datetime_now_formatted
+from utils.email import send_email_login_notification
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -89,6 +94,7 @@ class Custom_loginView(LoginView):
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
+                    send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
                     if(usuario.secret != None): 
                         return redirect("comprobarqr", usuario.id)
                     return redirect("home")
@@ -99,6 +105,9 @@ class Custom_loginView(LoginView):
     def get_success_url(self):
         user = self.request.user
 
+        
+        
+        # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
             user_id = self.request.user.id
             success_url = reverse('comprobarqr', kwargs={'user_id': user_id})
