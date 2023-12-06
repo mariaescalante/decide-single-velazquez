@@ -25,7 +25,7 @@ class CustomUser(AbstractUser):
             user: El usuario a bloquear.
         """
 
-        user.active = False
+        user.is_active = False
         user.save()
 
 
