@@ -117,7 +117,6 @@ class CertLoginView(LoginView):
                 cert_file = request.FILES.get('cert_file')
                 password = form.cleaned_data['password']
 
-                # Accede al contenido del archivo directamente
                 cert_content = cert_file.read()
                 
                 cert_data = json.loads(get_cert_data_in_json(cert_content, password))
@@ -126,7 +125,6 @@ class CertLoginView(LoginView):
                 last_name = cert_data["surname"]
                 dni = cert_data["commonName"].split(" - ")[1]
                 
-                # Buscamos si existe el user en la db
                 user = CustomUser.objects.filter(username=dni).first()
                 
                 if not user:
@@ -134,15 +132,12 @@ class CertLoginView(LoginView):
                                     
                 user.save()
                     
-            # Autentica y loguea al usuario
             authenticate(request, username=user.username)
             login(request, user)
 
             return redirect(self.success_url)
         
         except Exception as e:
-            # Maneja la excepción y agrega un mensaje de error al formulario
             form.add_error(None, f'Error al procesar el certificado: {str(e)}')
 
-        # Manejar el caso en que el formulario no es válido
         return render(request, self.template_name, {'form': form})
