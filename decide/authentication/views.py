@@ -78,13 +78,19 @@ class Custom_loginView(LoginView):
         
         if request.POST :
             usuario = CustomUser.objects.get(username=request.POST.get("username"))
-            
-            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
+            if not usuario.is_active:
+                # La cuenta está bloqueada.
+
+                user_failed_login_attempts = 0
+                return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
+
+            elif user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
                 # El límite de intentos fallidos se ha alcanzado.
                 
                 usuario = CustomUser.objects.get(username=request.POST.get("username"))
                 CustomUser.block_account(usuario)
-                return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
+                
+
             else:
                 # El usuario no existe o la contraseña es incorrecta.
                 if(not check_password(request.POST.get("password"), usuario.password) and usuario.username in usernames):
@@ -101,8 +107,10 @@ class Custom_loginView(LoginView):
                     user_failed_login_attempts = 0
                     login(request, usuario)
                     send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
-                    if(usuario.secret != None): 
-                        return redirect("comprobarqr", usuario.id)
+                    if(usuario.secret):
+                        return redirect("comprobarqr", user_id=usuario.id)
+
+
                     return redirect("home")
             
                 
@@ -129,6 +137,13 @@ class Custom_loginView(LoginView):
 
         return super().get_success_url()
    
+def quitardobleautenticacion(request, user_id):
+    user = CustomUser.objects.get(pk=user_id)
+    user.secret = None
+    user.save()
+    os.remove(os.path.join(BASE_DIR,f'authentication/static/{user.username}.png'))
+
+    return redirect('home')
 
 def registro(request):
     data = {
