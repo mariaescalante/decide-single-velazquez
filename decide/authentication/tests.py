@@ -227,7 +227,7 @@ class AuthTestCase(APITestCase):
         self.assertEqual(sent_mail.to, recipient_list)
         self.assertIn(expected_text, sent_mail.body)
 
-    def test_password_change_required(self):
+    def test_password_change_required_1(self):
         data = {'username': 'rafaeldavidgg', 'password': 'decidepass123'}
         response = self.client.post('/authentication/login2/', data, format='json')
         self.assertEqual(response.status_code, 200)
@@ -246,6 +246,43 @@ class AuthTestCase(APITestCase):
 
         user.last_password_change = timezone.now()
         user.save()
+
+    def test_password_change_required_2(self):
+        # El usuario no ha iniciado sesión recientemente
+        data = {'username': 'rafaeldavidgg', 'password': 'decidepass123'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        user = CustomUser.objects.get(username='rafaeldavidgg')
+        user.last_login = timezone.now() - timedelta(days=15)
+        user.last_password_change -= timedelta(days=30)
+        user.save()
+
+        response = self.client.post('/authentication/logout2/')
+        self.assertEqual(response.status_code, 302)
+
+        data = {'username': 'rafaeldavidgg', 'password': 'decidepass123'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.should_change_password(user))
+
+    def test_password_change_required_negative(self):
+        # El usuario ha cambiado la contraseña en los últimos 7 días
+        data = {'username': 'rafaeldavidgg', 'password': 'newpassword'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        user = CustomUser.objects.get(username='rafaeldavidgg')
+        user.last_password_change = timezone.now() - timedelta(days=5)
+        user.save()
+
+        response = self.client.post('/authentication/logout2/')
+        self.assertEqual(response.status_code, 302)
+
+        data = {'username': 'rafaeldavidgg', 'password': 'newpassword'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.should_change_password(user))
 
     def should_change_password(self, user):
         last_change = user.last_password_change
