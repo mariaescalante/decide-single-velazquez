@@ -4,10 +4,10 @@ from django.http import HttpRequest
 import pytz
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
+from authentication.models import CustomUser, UserChange
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 import time
-from authentication.models import CustomUser
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from base import mods
@@ -337,11 +337,13 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/register_email/', data, format='json')
         self.assertEqual(response.status_code, 200)
         user_created = CustomUser.objects.filter(email='rafaeldgarciagalocha@gmail.com').exists()
+
         self.assertTrue(user_created)
 
         response = self.client.post('/authentication/register_email/', data2, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
+
 
 class CertLoginViewTest(TestCase):
 
@@ -466,4 +468,45 @@ class TestEmailNotification(TestCase):
         
         expected_html_message = render_to_string(template, expected_context)
         self.assertEqual(sent_email.alternatives[0][0], expected_html_message)
-  
+
+
+class RegistroCambiosTest(APITestCase):
+
+    def setUp(self):
+        self.user = CustomUser(username='noadmin')
+        self.user.set_password('qwerty')
+        self.user.save()
+    
+    def authenticate_user(self):
+        self.client.force_login(self.user)
+
+
+    def test_registro_cambios(self):
+        self.authenticate_user()
+
+        url = reverse('editar_perfil')
+                
+        nuevos_datos = {
+            'username':'noadmin',
+            'first_name': 'Nuevo',
+            'last_name': 'Usuario',
+            'email': 'nuevo_usuario@gmail.com',
+        }
+
+        self.client.post(url, nuevos_datos)
+        
+        self.user.refresh_from_db()
+        user_change_first_name = UserChange.objects.get(usuario=self.user, campo_modificado='first_name')
+        user_change_last_name = UserChange.objects.get(usuario=self.user, campo_modificado='last_name')
+        user_change_email = UserChange.objects.get(usuario=self.user, campo_modificado='email')
+
+        self.assertEqual(user_change_first_name.dato_anterior, '')
+        self.assertEqual(user_change_first_name.dato_nuevo, 'Nuevo')
+        
+        self.assertEqual(user_change_last_name.dato_anterior, '')
+        self.assertEqual(user_change_last_name.dato_nuevo, 'Usuario')
+
+        self.assertEqual(user_change_email.dato_anterior, '')
+        self.assertEqual(user_change_email.dato_nuevo, 'nuevo_usuario@gmail.com')
+
+

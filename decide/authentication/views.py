@@ -23,7 +23,7 @@ from django.utils.decorators import method_decorator
 from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm, EditarPerfilForm
 from .serializers import UserSerializer
-from .models import CustomUser
+from .models import CustomUser, UserChange
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
@@ -301,6 +301,7 @@ def cuenta(request):
     }
     return render(request, "cuenta.html", data)
 
+
 @login_required
 def editar_perfil(request):
     user = request.user
@@ -308,7 +309,19 @@ def editar_perfil(request):
     if request.method == 'POST':
         form = EditarPerfilForm(request.POST, instance=user)
         if form.is_valid():
+            old_user = CustomUser.objects.get(pk=user.pk)
             form.save()
+            new_user = CustomUser.objects.get(pk=user.pk)
+
+            for field in form.changed_data:
+                old_value = getattr(old_user, field)
+                new_value = getattr(new_user, field)
+                UserChange.objects.create(
+                    usuario=user,
+                    campo_modificado=field,
+                    dato_anterior=str(old_value),
+                    dato_nuevo=str(new_value)
+                )
             return redirect('cuenta')
     else:
         form = EditarPerfilForm(instance=user)
