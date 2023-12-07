@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <title>NUEVO INICIO DE SESIÓN</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style type="text/css">
+            * {
+            font-family: Impact, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            }
+            h3 {
+            color: #CE5937;
+            font-size: 30px;
+            margin-bottom: 20px;
+            }
+            body {
+            width: 50%;
+            max-width: 500px;
+            margin: 0px auto;
+            }
+            p {
+            margin-bottom: 7px;
+            color: black;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>NUEVO INICIO DE SESIÓN</h3>
+        <p>Hemos detectado un nuevo inicio de sesión, <b>{{ nombre }}</b></p>
+        <p>IP {{ direccion_ip }}</p>
+        <p>{{ agente_usuario }}</p>
+        <p>{{ fecha_actual }}</p>
+    </body>
+</html>

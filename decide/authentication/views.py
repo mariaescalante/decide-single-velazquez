@@ -1,4 +1,6 @@
+import json
 from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
 from rest_framework.response import Response
 from rest_framework.status import (
         HTTP_201_CREATED,
@@ -18,12 +20,15 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm, EditarPerfilForm
 from .serializers import UserSerializer
 from .models import CustomUser
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
+from django.contrib.auth.views import LoginView
+from utils.decrypt_cert import get_cert_data_in_json
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse, reverse_lazy
 import pyotp
@@ -36,8 +41,14 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib import messages
 from datetime import timedelta
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from utils.datetimes import get_datetime_now_formatted
+from utils.email import send_email_login_notification
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 @login_required
 def home(request):
@@ -67,13 +78,19 @@ class Custom_loginView(LoginView):
         
         if request.POST :
             usuario = CustomUser.objects.get(username=request.POST.get("username"))
-            
-            if user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
+            if not usuario.is_active:
+                # La cuenta está bloqueada.
+
+                user_failed_login_attempts = 0
+                return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
+
+            elif user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
                 # El límite de intentos fallidos se ha alcanzado.
                 
                 usuario = CustomUser.objects.get(username=request.POST.get("username"))
                 CustomUser.block_account(usuario)
-                return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
+                
+
             else:
                 # El usuario no existe o la contraseña es incorrecta.
                 if(not check_password(request.POST.get("password"), usuario.password) and usuario.username in usernames):
@@ -89,8 +106,11 @@ class Custom_loginView(LoginView):
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
-                    if(usuario.secret != None): 
-                        return redirect("comprobarqr", usuario.id)
+                    send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
+                    if(usuario.secret):
+                        return redirect("comprobarqr", user_id=usuario.id)
+
+
                     return redirect("home")
             
                 
@@ -99,6 +119,9 @@ class Custom_loginView(LoginView):
     def get_success_url(self):
         user = self.request.user
 
+        
+        
+        # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
             user_id = self.request.user.id
             success_url = reverse('comprobarqr', kwargs={'user_id': user_id})
@@ -114,6 +137,13 @@ class Custom_loginView(LoginView):
 
         return super().get_success_url()
    
+def quitardobleautenticacion(request, user_id):
+    user = CustomUser.objects.get(pk=user_id)
+    user.secret = None
+    user.save()
+    os.remove(os.path.join(BASE_DIR,f'authentication/static/{user.username}.png'))
+
+    return redirect('home')
 
 def registro(request):
     data = {
@@ -220,6 +250,48 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+
+
+class CertLoginView(LoginView):
+    template_name = 'cert_login.html'
+    success_url = 'home'
+
+    def get(self, request, *args, **kwargs):
+        form = CustomAuthenticationForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = CustomAuthenticationForm(request.POST, request.FILES)
+
+        try:
+            if form.is_valid():
+                cert_file = request.FILES.get('cert_file')
+                password = form.cleaned_data['password']
+
+                cert_content = cert_file.read()
+                
+                cert_data = json.loads(get_cert_data_in_json(cert_content, password))
+                
+                first_name = cert_data["givenName"]
+                last_name = cert_data["surname"]
+                dni = cert_data["commonName"].split(" - ")[1]
+                
+                user = CustomUser.objects.filter(username=dni).first()
+                
+                if not user:
+                    user = CustomUser.objects.create_user(username=dni, first_name=first_name, last_name=last_name)
+                                    
+                user.save()
+                    
+            authenticate(request, username=user.username)
+            login(request, user)
+
+            return redirect(self.success_url)
+        
+        except Exception as e:
+            form.add_error(None, f'Error al procesar el certificado: {str(e)}')
+
+        return render(request, self.template_name, {'form': form})
     
 @login_required
 def cuenta(request):
@@ -278,4 +350,3 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'password_change_success.html'
-
