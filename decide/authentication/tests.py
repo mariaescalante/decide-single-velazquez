@@ -312,7 +312,7 @@ class CertLoginViewTest(TestCase):
         self.client = Client()
         self.user_model = get_user_model()
         self.url = reverse('cert_login')
-        self.cert_path = 'decide/authentication/test_data/secreto001.p12'
+        self.cert_path = 'authentication/test_data/secreto001.p12'
         self.cert_name = 'secreto001.p12'
         
     def test_cert_login_view_get(self):
