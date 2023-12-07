@@ -350,3 +350,7 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'password_change_success.html'
+
+def terms_and_conditions(request):
+    # Lógica para los términos y condiciones
+    return render(request, 'terminos_condiciones.html')
