@@ -15,6 +15,5 @@ crispy-bootstrap5
 django-crispy-forms
 pyotp
 qrcode
-pyautogui
 opencv-python
-pyvirtualdisplay
+
