@@ -9,9 +9,10 @@ from authentication.models import CustomUser
 from django.urls import reverse
 
 class AuthTestCase(TestCase):
-
+    
     def setUp(self):
-        self.user = CustomUser.objects.create(username='testuser', password='12345')
+        self.user = CustomUser(username='noadmin')
+        self.user.set_password('qwerty')
         self.user.save()
         
     def authenticate_user(self):

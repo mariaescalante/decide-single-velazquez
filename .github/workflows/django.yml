@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - master
+      - feature/workflow
 
 jobs:
   build:
@@ -25,6 +26,10 @@ jobs:
           - 5432:5432
         # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      vnc: 
+        image: dorowu/ubuntu-desktop-lxde-vnc:latest
+        ports:
+          - "5900:5900"
 
     steps:
     - uses: actions/checkout@v3
@@ -34,6 +39,15 @@ jobs:
         python-version: ${{matrix.pyversion}}
     - name: psycopg2 prerequisites
       run: sudo apt-get install libpq-dev
+    - name: Wait for VNC to be ready
+      run: sleep 10
+    - name: dependencies for selenium
+      run: |
+        sudo apt-get install python3-tk
+        sudo apt-get install gnome-screenshot
+        sudo apt-get install -y chromium-browser
+  
+   
     - name: Install dependencies and config
       run: |
         python -m pip install --upgrade pip
@@ -47,11 +61,9 @@ jobs:
     - name: Run tests
       run: |
         cd decide
-        coverage run --branch --source=. ./manage.py test  --keepdb 
+        coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
-    - name: Codacy Coverage Reporter
-      uses: codacy/codacy-coverage-reporter-action@v1
-      with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: decide/coverage.xml
+
+
+
 

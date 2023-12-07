@@ -116,6 +116,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'decide.wsgi.application'
 
+AUTH_MAX_FAILED_LOGIN_ATTEMPTS = 5
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -191,7 +192,6 @@ EMAIL_HOST_USER = 'decidevelazquez@gmail.com'
 EMAIL_HOST_PASSWORD = 'ibab blmy ccow hltx'
 DEFAULT_FROM_EMAIL = 'decidevelazquez@gmail.com'
 SERVER_EMAIL = 'decidevelazquez@gmail.com'
-
 
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
