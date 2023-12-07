@@ -2,7 +2,7 @@ import random
 import itertools
 from django.utils import timezone
 from django.conf import settings
-from django.contrib.auth.models import User
+from authentication.models import CustomUser
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+import uuid
 
 from base import mods
 from base.tests import BaseTestCase
@@ -54,17 +55,21 @@ class VotingTestCase(BaseTestCase):
         v.auths.add(a)
 
         return v
+    
 
+    
     def create_voters(self, v):
         for i in range(100):
-            u, _ = User.objects.get_or_create(username='testvoter{}'.format(i))
-            u.is_active = True
-            u.save()
-            c = Census(voter_id=u.id, voting_id=v.id)
-            c.save()
+            if not CustomUser.objects.filter(pk=i).exists():
+                u = CustomUser(pk=i, is_active=True, username='testvoter{}'.format(i))
+                u.save()
+                c = Census(voter_id=u.id, voting_id=v.id)
+                c.save()
+            
+
 
     def get_or_create_user(self, pk):
-        user, _ = User.objects.get_or_create(pk=pk)
+        user, _ = CustomUser.objects.get_or_create(pk=pk)
         user.username = 'user{}'.format(pk)
         user.set_password('qwerty')
         user.save()
@@ -216,6 +221,23 @@ class VotingTestCase(BaseTestCase):
         response = self.client.put('/voting/{}/'.format(voting.pk), data, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), 'Voting already tallied')
+    
+    def test_to_string(self):
+        #Crea un objeto votacion
+        v = self.create_voting()
+        #Verifica que el nombre de la votacion es test voting
+        self.assertEquals(str(v),"test voting")
+        #Verifica que la descripcion de la pregunta sea test question
+        self.assertEquals(str(v.question),"test question")
+        #Verifica que la primera opcion es option1 (2)
+        self.assertEquals(str(v.question.options.all()[0]),"option 1 (2)")
+    
+    def test_update_voting_405(self):
+        v = self.create_voting()
+        data = {} #El campo action es requerido en la request
+        self.login()
+        response = self.client.post('/voting/{}/'.format(v.pk), data, format= 'json')
+        self.assertEquals(response.status_code, 405)
 
 class LogInSuccessTests(StaticLiveServerTestCase):
 
@@ -361,3 +383,43 @@ class QuestionsTests(StaticLiveServerTestCase):
 
         self.assertTrue(self.cleaner.find_element_by_xpath('/html/body/div/div[3]/div/div[1]/div/form/div/p').text == 'Please correct the errors below.')
         self.assertTrue(self.cleaner.current_url == self.live_server_url+"/admin/voting/question/add/")
+        
+class VotingModelTestCase(BaseTestCase):
+    def setUp(self):
+        q = Question(desc='Descripcion')
+        q.save()
+        
+        opt1 = QuestionOption(question=q, option='opcion 1')
+        opt1.save()
+        opt1 = QuestionOption(question=q, option='opcion 2')
+        opt1.save()
+
+        self.v = Voting(name='Votacion', question=q)
+        self.v.save()
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+        self.v = None
+
+    def testExist(self):
+        v=Voting.objects.get(name='Votacion')
+        self.assertEquals(v.question.options.all()[0].option, "opcion 1")
+
+
+class VotingViewTestCase(BaseTestCase):
+    def test_create_voting_API(self):
+        self.login()
+        data = {
+            'name': 'Example',
+            'desc': 'Description example',
+            'question': 'I want a ',
+            'question_opt': ['cat', 'dog', 'horse']
+        }
+
+        response = self.client.post('/voting/', data, format='json')
+        self.assertEqual(response.status_code, 201)
+
+        voting = Voting.objects.get(name='Example')
+        self.assertEqual(voting.desc, 'Description example')
+

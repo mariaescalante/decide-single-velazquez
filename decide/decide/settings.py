@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'crispy_forms',
+    'crispy_bootstrap5',
+
     'corsheaders',
     'django_filters',
     'rest_framework',
@@ -45,6 +48,17 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'gateway',
 ]
+
+AUTH_USER_MODEL = 'authentication.CustomUser'
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+LOGIN_REDIRECT_URL = ('/authentication/dashboard/')
+LOGOUT_REDIRECT_URL = ('/authentication/login2/')
+LOGIN_URL = '/authentication/login2/'
+
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'authentication/static'),)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -102,6 +116,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'decide.wsgi.application'
 
+AUTH_MAX_FAILED_LOGIN_ATTEMPTS = 5
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -123,16 +138,23 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'authentication.validators.CustomUserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ('username', 'email'),
+            'max_similarity': 0.7,
+        },
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'authentication.validators.CustomMinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        },
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'authentication.validators.CustomCommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'authentication.validators.CustomNumericPasswordValidator',
     },
 ]
 
@@ -158,6 +180,19 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 STATIC_URL = '/static/'
 
+# Para el desarrollo (verlo en consola):
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Backend de Gmail en lugar del de la consola
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'decidevelazquez@gmail.com'
+EMAIL_HOST_PASSWORD = 'ibab blmy ccow hltx'
+DEFAULT_FROM_EMAIL = 'decidevelazquez@gmail.com'
+SERVER_EMAIL = 'decidevelazquez@gmail.com'
+
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
 
@@ -177,6 +212,7 @@ if os.path.exists("config.jsonnet"):
     config = json.loads(evaluate_file("config.jsonnet"))
     for k, v in config.items():
         vars()[k] = v
+
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES

@@ -10,3 +10,10 @@ jsonnet==0.18.0
 django-nose==1.4.6
 django-rest-swagger==2.2.0
 selenium==4.7.2
+pynose==1.4.8
+crispy-bootstrap5
+django-crispy-forms
+cryptography
+pyotp
+qrcode
+opencv-python

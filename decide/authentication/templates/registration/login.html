@@ -1,0 +1,29 @@
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h2>Inicio de Sesión</h2>
+          </div>
+          <div class="card-body">
+            <form method="post" class="form-signin">
+              {% csrf_token %}
+              {{ form|crispy }}
+              
+              <button type="submit">Iniciar Sesión</button>
+
+              <p><a href="/authentication/register_email/">Registrarme con correo electrónico</a></p>
+              
+              <p>¿No tienes cuenta? <a href="/authentication/register2/">Regístrate aquí</a></p>
+              
+            </form>
+            <p><a href="{% url "password_reset2" %}">¿Olvidaste tu contraseña?</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
