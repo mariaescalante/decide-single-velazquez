@@ -10,7 +10,14 @@
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">Activar autenticación de doble factor</legend>
                 <div class="form-group">
+                    {% if request.user.secret == None %}
                     <a id="enlace" href="/authentication/2fa/{{ user.id }}">Doble factor</a>
+                    {% else%}
+                    <a href="/authentication/2faquit/{{ user.id }}">Desactivar Doblefactor</a>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <a href="/authentication/cuenta">Ver mi perfil</a>
                 </div>
             </fieldset>
             <div class="form-group">

@@ -9,8 +9,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
 import os
-import pyautogui
+import pyotp
+from authentication.models import CustomUser
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,9 +27,13 @@ class AdminTestCase(StaticLiveServerTestCase):
         #Opciones de Chrome
 
 
+        if(os.path.exists(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))):
+            os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))
+            
         options = webdriver.ChromeOptions()
-        options.headless = False #Necesario
-        options.add_extension(os.path.join(BASE_DIR,'Authenticator.crx'))
+        options.headless = True  #Necesario
+        
+
         self.driver = webdriver.Chrome(options=options)
 
         super().setUp()
@@ -61,98 +67,31 @@ class AdminTestCase(StaticLiveServerTestCase):
     def test_multifactor_Correct(self):
         
         self.driver.get(f'{self.live_server_url}/authentication/login2/')
-        time.sleep(8)
-        
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        
         self.driver.find_element(By.ID,'enlace').click()
-        time.sleep(1)
-        inicio = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/inicio.png"), confidence= 0.75)
-        pyautogui.click(inicio)
-        time.sleep(1)
-        extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
-        pyautogui.click(extn)
-        time.sleep(1)
-        codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-        pyautogui.click(codigo)
-        time.sleep(3)
-        añadir = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/añadir_qr.png"), confidence= 0.6)
-        pyautogui.click(añadir)
-        time.sleep(1)
-        home = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/dashboard.png"), confidence= 0.75)
-        pyautogui.moveTo(100, 300, duration=1)
-        pyautogui.mouseDown()
-        pyautogui.moveTo(900, 1000, duration=1)
-        time.sleep(1)
-        pyautogui.mouseUp()
-        time.sleep(1)
-        pyautogui.press('enter')
-        time.sleep(2)
         self.driver.find_element(By.ID,'aceptar').send_keys(Keys.ENTER)
-        time.sleep(1)
         self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
-        time.sleep(1)
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
-        pyautogui.click(extn)
-        time.sleep(1)
-        codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-        pyautogui.click(codigo)
-        time.sleep(1)
-        decide = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/decideapp.png"), confidence= 0.75)
-        pyautogui.click(decide)
-        time.sleep(1)
-        pyautogui.press('tab')
-        pyautogui.press('enter')
-        time.sleep(1)
-        input_ = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/input.png"), confidence= 0.75)
-        pyautogui.click(input_)
-        pyautogui.keyDown('ctrl')
-        pyautogui.press('v')
-        pyautogui.keyUp('ctrl')
-        pyautogui.press('enter')
+        usuario = CustomUser.objects.get(username="noadmin")
+        totp_object = pyotp.TOTP(usuario.secret)
+        totp_object.now()
+        self.driver.find_element(By.ID,'codigo').send_keys(totp_object.now(), Keys.ENTER)
         time.sleep(2)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 1)
                 
-        
     def test_multifactor_wrong(self):
         self.driver.get(f'{self.live_server_url}/authentication/login2/')
-        time.sleep(8)
-        
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        
         self.driver.find_element(By.ID,'enlace').click()
-        time.sleep(1)
-        inicio = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/inicio.png"), confidence= 0.75)
-        pyautogui.click(inicio)
-        time.sleep(1)
-        extn = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/fijar.png"))
-        pyautogui.click(extn)
-        time.sleep(1)
-        codigo = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/extension.png"), confidence= 0.75)
-        pyautogui.click(codigo)
-        time.sleep(3)
-        añadir = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/añadir_qr.png"), confidence= 0.6)
-        pyautogui.click(añadir)
-        time.sleep(1)
-        home = pyautogui.locateOnScreen(os.path.join(BASE_DIR, "authentication/static/dashboard.png"), confidence= 0.75)
-        pyautogui.moveTo(100, 300, duration=1)
-        pyautogui.mouseDown()
-        pyautogui.moveTo(900, 1000, duration=1)
-        time.sleep(1)
-        pyautogui.mouseUp()
-        time.sleep(1)
-        pyautogui.press('enter')
-        time.sleep(2)
         self.driver.find_element(By.ID,'aceptar').send_keys(Keys.ENTER)
-        time.sleep(1)
         self.driver.find_element(By.ID,'logout').send_keys(Keys.ENTER)
-        time.sleep(1)
         self.driver.find_element(By.ID,'id_username').send_keys("noadmin")
         self.driver.find_element(By.ID,'id_password').send_keys("qwerty",Keys.ENTER)
-        self.driver.find_element(By.ID, 'codigo').send_keys("fhasjñfas", Keys.ENTER)
+        self.driver.find_element(By.ID,'codigo').send_keys("codigomal", Keys.ENTER)
+        time.sleep(2)
         self.assertTrue(len(self.driver.find_elements(By.ID, 'logout')) == 0)
-
+        self.assertTrue(len(self.driver.find_elements(By.ID, 'codigo')) == 1)
+        
