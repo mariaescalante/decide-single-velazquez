@@ -507,7 +507,6 @@ class TestEmailNotification(TestCase):
         
     def test_send_email_on_login_notification(self):
         response = self.client.post(reverse('login2'), {'username': self.user.username, 'password': 'qwerty'})
-        print(reverse('login2'))
         # Verifica que se haya enviado el correo electrónico
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Nuevo inicio de sesión')
@@ -544,18 +543,52 @@ class TestEmailNotification(TestCase):
         expected_html_message = render_to_string(template, expected_context)
         self.assertEqual(sent_email.alternatives[0][0], expected_html_message)
 
-
-class RegistroCambiosTest(APITestCase):
-
+class EditarPerfil(TestCase):
+    
     def setUp(self):
         self.user = CustomUser(username='noadmin')
         self.user.set_password('qwerty')
         self.user.save()
-    
+        
     def authenticate_user(self):
         self.client.force_login(self.user)
 
+    def test_editar_perfil_GET_restringido(self):
+        response = self.client.get(reverse('editar_perfil'))
+        self.assertRedirects(response, '/authentication/login2/?next=/authentication/cuenta/editar_perfil/')
+ 
+    def test_editar_perfil_GET_autorizado(self):
+        self.authenticate_user()
+        
+        response = self.client.get(reverse('editar_perfil'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'form')
 
+    def test_editar_perfil(self):
+        self.authenticate_user()
+
+        url = reverse('editar_perfil')
+        
+        success_url = reverse('cuenta')
+        
+        nuevos_datos = {
+            'username':'testuser',
+            'first_name': 'Nuevo',
+            'last_name': 'Usuario',
+            'email': 'nuevo_usuario@example.com',
+        }
+
+        response = self.client.post(url, nuevos_datos)
+        
+        self.assertRedirects(response, success_url)
+
+        self.assertEqual(response.status_code, 302)
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, nuevos_datos['first_name'])
+        self.assertEqual(self.user.last_name, nuevos_datos['last_name'])
+        self.assertEqual(self.user.email, nuevos_datos['email'])
+    
     def test_registro_cambios(self):
         self.authenticate_user()
 
@@ -583,5 +616,3 @@ class RegistroCambiosTest(APITestCase):
 
         self.assertEqual(user_change_email.dato_anterior, '')
         self.assertEqual(user_change_email.dato_nuevo, 'nuevo_usuario@gmail.com')
-
-
