@@ -183,6 +183,7 @@ class AuthTestCase(APITestCase):
         self.assertIn(expected_text, sent_mail.body)
 
 
+
 class RegistroEmailTest(TestCase):
 
     def test_registro_email_success(self):
@@ -296,5 +297,6 @@ class RegistroEmailTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
+
 
 
