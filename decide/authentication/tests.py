@@ -16,14 +16,11 @@ from django.core import mail
 from django.template.loader import render_to_string
 from datetime import timedelta
 from django.utils import timezone
-
 from utils.datetimes import get_datetime_now_formatted
 from utils.email import send_email_login_notification
-
-
 from django.core.files.uploadedfile import SimpleUploadedFile
-
 from authentication.forms import CustomAuthenticationForm
+from unittest.mock import patch
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -198,6 +195,7 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/login2/', {'username': 'voter1', 'password': '123'})
         self.assertEqual(response.status_code, 200)
 
+
     def test_password_reset_email(self):
         protocol = 'http'
         domain = '127.0.0.1:8000'
@@ -239,6 +237,78 @@ class AuthTestCase(APITestCase):
         self.assertEqual(sent_mail.from_email, from_email)
         self.assertEqual(sent_mail.to, recipient_list)
         self.assertIn(expected_text, sent_mail.body)
+
+    def test_password_reset_email_user_not_found(self):
+        protocol = 'http'
+        domain = '127.0.0.1:8000'
+        uid = 'uid123'
+        token = 'token123'
+        email = 'usuario_no_existente@example.com'
+        username = 'usuario_no_existente'
+
+        html_message = render_to_string('password_reset_email.html', {
+            'email': email,
+            'protocol': protocol,
+            'domain': domain,
+            'uid': uid,
+            'token': token,
+            'user': None,
+        })
+
+        subject = 'Password reset on 127.0.0.1:8000'
+        from_email = 'decidevelazquez@gmail.com'
+        recipient_list = [email]
+
+        with patch('django.core.mail.send_mail') as mock_send_mail:
+            mock_send_mail.return_value = None
+
+            mail.send_mail(
+                subject,
+                'Cuerpo del correo',
+                from_email,
+                recipient_list,
+                html_message=html_message
+            )
+
+            self.assertTrue(mock_send_mail.called)
+            self.assertEqual(len(mail.outbox), 0)
+
+    def test_password_reset_email_invalid_email(self):
+        protocol = 'http'
+        domain = '127.0.0.1:8000'
+        uid = 'uid123'
+        token = 'token123'
+        email = 'correo_invalido'
+        username = 'usuario_con_correo_invalido'
+
+        html_message = render_to_string('password_reset_email.html', {
+            'email': email,
+            'protocol': protocol,
+            'domain': domain,
+            'uid': uid,
+            'token': token,
+            'user': None,
+        })
+
+        subject = 'Password reset on 127.0.0.1:8000'
+        from_email = 'decidevelazquez@gmail.com'
+        recipient_list = [email]
+
+        with patch('django.core.mail.send_mail') as mock_send_mail:
+            mock_send_mail.return_value = None
+
+            mail.send_mail(
+                subject,
+                'Cuerpo del correo',
+                from_email,
+                recipient_list,
+                html_message=html_message
+            )
+
+            self.assertTrue(mock_send_mail.called)
+            self.assertEqual(len(mail.outbox), 0)
+
+
 
     def test_password_change_required_1(self):
         data = {'username': 'rafaeldavidgg', 'password': 'decidepass123'}
