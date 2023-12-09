@@ -61,6 +61,14 @@ jobs:
         coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
 
-
+    - name: Check commit message format 1
+      run: |
+        commit_messages=$(git log --format=%s ${{github.event.before}}..${{github.sha}})
+        for message in $commit_messages; do
+          if ! echo "$message" | grep -E '^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)' >/dev/null; then
+            echo "Error: Commit message does not match the expected format: $message"
+            exit 1
+          fi
+        done
 
 
