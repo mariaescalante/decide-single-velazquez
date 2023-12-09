@@ -238,13 +238,13 @@ class AuthTestCase(APITestCase):
         self.assertEqual(sent_mail.to, recipient_list)
         self.assertIn(expected_text, sent_mail.body)
 
-    def test_password_reset_email_user_not_found(self):
+    def test_password_reset_email_missing_email(self):
         protocol = 'http'
         domain = '127.0.0.1:8000'
         uid = 'uid123'
         token = 'token123'
-        email = 'usuario_no_existente@example.com'
-        username = 'usuario_no_existente'
+        email = ''
+        username = 'usuario_sin_correo'
 
         html_message = render_to_string('password_reset_email.html', {
             'email': email,
@@ -279,7 +279,7 @@ class AuthTestCase(APITestCase):
         uid = 'uid123'
         token = 'token123'
         email = 'correo_invalido'
-        username = 'usuario_con_correo_invalido'
+        username = 'usuario'
 
         html_message = render_to_string('password_reset_email.html', {
             'email': email,
