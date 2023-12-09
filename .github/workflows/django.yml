@@ -61,7 +61,7 @@ jobs:
         coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
 
-    - name: Check commit message format 4
+    - name: Check commit message format
       run: |
         commit_message=$(git log --format=%s -n 1 ${{github.sha}})
         if ! echo "$commit_message" | grep -E '^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)' >/dev/null; then
