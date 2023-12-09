@@ -16,6 +16,15 @@
 - name: Admin superuser
   become: yes
   become_user: decide
-  shell: ~/venv/bin/python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='admin') or User.objects.create_superuser('admin', 'admin@example.com', 'admin')"
+  shell: ~/venv/bin/python manage.py shell -c "from authentication.models import CustomUser; CustomUser.objects.filter(username='admin') or CustomUser.objects.create_superuser('admin', 'admin@example.com', 'admin')"
   args:
     chdir: /home/decide/decide/decide
+
+- name: Change permissions on decide (Make static directory tree readable)
+  become: yes
+  file:
+    path: /home/decide
+    owner: "decide"
+    recurse: yes
+    group: decide
+    mode: "555"
