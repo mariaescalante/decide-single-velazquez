@@ -16,4 +16,3 @@ django-crispy-forms
 cryptography
 pyotp
 qrcode
-opencv-python

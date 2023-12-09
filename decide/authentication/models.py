@@ -31,5 +31,11 @@ class CustomUser(AbstractUser):
 
         user.is_active = False
         user.save()
-
-
+        
+class UserChange(models.Model):
+    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    dato_anterior = models.CharField(max_length=255, blank=True, null=True)
+    dato_nuevo = models.CharField(max_length=255, blank=True, null=True)
+    campo_modificado = models.CharField(max_length=255, blank=True, null=True)
+    
