@@ -68,13 +68,13 @@ jobs:
 
     - name: Build the Docker image
       run: |
-      cd docker
-      docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest .
+        cd docker
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest .
 
     - name: Push to Docker Hub
       run: |
-      cd docker
-      docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
+        cd docker
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
 
 
 
