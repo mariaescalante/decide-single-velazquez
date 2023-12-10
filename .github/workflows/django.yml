@@ -62,24 +62,21 @@ jobs:
         coverage xml 
 
     - name: Check commit message format
-    run: |
-      if [ "${{ github.event_name }}" == "push" ]; then
-        # Obtener los mensajes de los commits en el push actual
-        COMMIT_MESSAGES=$(git log --format="%s" ${GITHUB_SHA}^1..${GITHUB_SHA})
-
-        # Verificar el formato para cada mensaje de commit
-        PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
-        for COMMIT_MESSAGE in $COMMIT_MESSAGES; do
-          if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
-            if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
-              echo "Error: El mensaje de commit '$COMMIT_MESSAGE' no sigue el formato esperado."
-              exit 1
+      run: |
+        if [ "${{ github.event_name }}" == "push" ]; then
+          COMMIT_MESSAGES=$(git log --format="%s" $(git rev-parse HEAD^1)..HEAD)
+          PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
+          for COMMIT_MESSAGE in $COMMIT_MESSAGES; do
+            if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
+              if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
+                echo "Error: El mensaje de commit '$COMMIT_MESSAGE' no sigue el formato esperado."
+                exit 1
+              fi
+            else
+              echo "Skipping commit message verification for pull request merge commit."
             fi
-          else
-            echo "Skipping commit message verification for pull request merge commit."
-          fi
-        done
-      else
-        echo "Skipping commit message verification for pull request."
-      fi
+          done
+        else
+          echo "Skipping commit message verification for pull request."
+        fi
 
