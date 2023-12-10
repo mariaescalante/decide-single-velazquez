@@ -64,7 +64,7 @@ jobs:
     - name: Check commit message format
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
-          COMMIT_MESSAGES=$(git log --format="%s" ${GITHUB_SHA}^1..${GITHUB_SHA})
+          COMMIT_MESSAGES=$(git log --format="%s" ${GITHUB_SHA}~1..${GITHUB_SHA})
           PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
 
           for COMMIT_MESSAGE in $COMMIT_MESSAGES; do
