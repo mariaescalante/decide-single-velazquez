@@ -2,6 +2,9 @@ name: Python application
 
 on:
   push:
+    branches:
+      - master
+      - feature/workflow
 
 jobs:
   build:
@@ -13,7 +16,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:11.18-bullseye
+        image: postgres:14.9-alpine
         env:
           POSTGRES_USER: decide
           POSTGRES_PASSWORD: decide
@@ -61,10 +64,18 @@ jobs:
         coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
 
-    - name: Check commit message format
+    - name: Login to Docker Hub
+      run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Build the Docker image
       run: |
-        commit_message=$(git log --format=%s -n 1 ${{github.sha}})
-        if ! echo "$commit_message" | grep -E '^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)' >/dev/null; then
-          echo "Error: Commit message does not match the expected format: $commit_message"
-          exit 1
-        fi
+        cd docker
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest .
+
+    - name: Push to Docker Hub
+      run: |
+        cd docker
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
+
+
+
