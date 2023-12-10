@@ -64,7 +64,7 @@ jobs:
 
     - name: Check commit message format
       run: |
-        COMMIT_MESSAGES=$(git log --format=%B 1a546b6600ad78eb1ace321766cfc573af75c26a..HEAD)
+        COMMIT_MESSAGES=$(git log --format=%B 1a546b6600ad78eb1ace321766cfc573af75c26a..${{ github.sha }}))
         PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
         IFS=$'\n' # Configura el separador interno para manejar espacios en mensajes
 
