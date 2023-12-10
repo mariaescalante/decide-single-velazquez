@@ -64,7 +64,7 @@ jobs:
 
     - name: Check commit message format
       run: |
-        COMMIT_MESSAGES=$(git log --format="%s" $(git rev-parse HEAD^1)..HEAD)
+        COMMIT_MESSAGES=$(git log --format="%s" $(git rev-list --max-parents=0 HEAD)..HEAD)
         PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
         for COMMIT in $COMMIT_MESSAGE; do
           if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
