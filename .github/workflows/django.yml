@@ -64,8 +64,12 @@ jobs:
     - name: Check commit message format
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
-          COMMIT_MESSAGES=$(git log --format="%s" $(git rev-parse HEAD^1)..HEAD)
+          # Obtener el commit anterior al último push, o si es el primer commit, obtener el propio commit
+          BASE_COMMIT=$(git rev-parse HEAD^1 2>/dev/null || git rev-parse HEAD)
+
+          COMMIT_MESSAGES=$(git log --format="%s" $BASE_COMMIT..${{ github.sha }})
           PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
+          
           for COMMIT_MESSAGE in $COMMIT_MESSAGES; do
             if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
               if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
@@ -79,4 +83,5 @@ jobs:
         else
           echo "Skipping commit message verification for pull request."
         fi
+
 
