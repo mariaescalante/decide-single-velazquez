@@ -34,10 +34,37 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{matrix.pyversion}}
+    - name: psycopg2 prerequisites
+      run: sudo apt-get install libpq-dev
+    - name: Wait for VNC to be ready
+      run: sleep 10
+    - name: dependencies for selenium
+      run: |
+        sudo apt-get install python3-tk
+        sudo apt-get install gnome-screenshot
+        sudo apt-get install -y chromium-browser
+  
+   
+    - name: Install dependencies and config
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install codacy-coverage
+        cp decide/local_settings.gactions.py decide/local_settings.py
+    - name: Run migrations (unnecessary)
+      run: |
+        cd decide
+        python manage.py makemigrations
+        python manage.py migrate
+    - name: Run tests
+      run: |
+        cd decide
+        coverage run --branch --source=. ./manage.py test --keepdb 
+        coverage xml 
 
     - name: Check commit message format
       run: |
-        COMMIT_MESSAGES=$(git log --format=%B ${{ github.sha }})
+        COMMIT_MESSAGES=$(git log --format=%B 1a546b6600ad78eb1ace321766cfc573af75c26a..HEAD)
         PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
         IFS=$'\n' # Configura el separador interno para manejar espacios en mensajes
 
