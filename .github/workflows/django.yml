@@ -61,7 +61,7 @@ jobs:
         coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
 
-    - name: Check commit message format 1
+    - name: Check commit message format
     run: |
       if [ "${{ github.event_name }}" == "push" ]; then
         # Obtener los mensajes de los commits en el push actual
