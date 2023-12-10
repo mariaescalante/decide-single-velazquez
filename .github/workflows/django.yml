@@ -78,4 +78,3 @@ jobs:
         else
           echo "Skipping commit message verification for pull request."
         fi
-
