@@ -64,7 +64,7 @@ jobs:
     - name: Check commit message format
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
-          COMMIT_MESSAGES=$(git log --format="%s" -n 1 ${GITHUB_SHA})
+          COMMIT_MESSAGES=$(git log --format="%s" ${{ github.event.before }}..${{ github.sha }})
           PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
 
           for COMMIT_MESSAGE in $COMMIT_MESSAGES; do
@@ -81,5 +81,4 @@ jobs:
         else
           echo "Skipping commit message verification for pull request."
         fi
-
 
