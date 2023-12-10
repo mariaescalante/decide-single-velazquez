@@ -2,6 +2,8 @@ name: Python application
 
 on:
   push:
+    branches:
+      - '*'
 
 jobs:
   build:
@@ -64,17 +66,15 @@ jobs:
     - name: Check commit message format
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
-          COMMIT_MESSAGE=$(git log --format="%s" -n 1 ${{ github.sha }})
+          COMMIT_MESSAGE=$(git log --format="%s" ${{ github.sha }})
           PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
-          
-          if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
-            if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
-              echo "Error: El mensaje de commit '$COMMIT_MESSAGE' no sigue el formato esperado."
-              exit 1
+          for COMMIT in $COMMIT_MESSAGE; do
+            if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
+              if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
+                echo "Error: El mensaje de commit '$COMMIT_MESSAGE' no sigue el formato esperado."
+                exit 1
+              fi
+            else
+              echo "Skipping commit message verification for pull request merge commit."
             fi
-          else
-            echo "Skipping commit message verification for pull request merge commit."
-          fi
-        else
-          echo "Skipping commit message verification for pull request."
-        fi
+          done
