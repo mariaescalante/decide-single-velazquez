@@ -71,6 +71,8 @@ jobs:
             if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
               echo "Error: El mensaje de commit '$COMMIT_MESSAGE' no sigue el formato esperado."
               exit 1
+            else
+              echo "Commit message '$COMMIT_MESSAGE' follows the format."
             fi
           else
             echo "Skipping commit message verification for pull request merge commit."
