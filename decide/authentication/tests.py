@@ -658,6 +658,18 @@ class EditarPerfil(TestCase):
         self.assertEqual(self.user.first_name, nuevos_datos['first_name'])
         self.assertEqual(self.user.last_name, nuevos_datos['last_name'])
         self.assertEqual(self.user.email, nuevos_datos['email'])
+
+
+class RegistroCambiosTest(TestCase):
+    
+    def setUp(self):
+        self.user = CustomUser(username='usuario_original')
+        self.user.set_password('user12345')
+        self.user.save()
+        
+    def authenticate_user(self):
+        self.client.force_login(self.user)
+
     
     def test_registro_cambios(self):
         self.authenticate_user()
@@ -665,10 +677,10 @@ class EditarPerfil(TestCase):
         url = reverse('editar_perfil')
                 
         nuevos_datos = {
-            'username':'noadmin',
-            'first_name': 'Nuevo',
-            'last_name': 'Usuario',
-            'email': 'nuevo_usuario@gmail.com',
+            'username':'usuario_original',
+            'first_name': 'Usuario',
+            'last_name': 'Editado',
+            'email': 'usaurio_editado@gmail.com',
         }
 
         self.client.post(url, nuevos_datos)
@@ -679,13 +691,42 @@ class EditarPerfil(TestCase):
         user_change_email = UserChange.objects.get(usuario=self.user, campo_modificado='email')
 
         self.assertEqual(user_change_first_name.dato_anterior, '')
-        self.assertEqual(user_change_first_name.dato_nuevo, 'Nuevo')
+        self.assertEqual(user_change_first_name.dato_nuevo, 'Usuario')
         
         self.assertEqual(user_change_last_name.dato_anterior, '')
-        self.assertEqual(user_change_last_name.dato_nuevo, 'Usuario')
+        self.assertEqual(user_change_last_name.dato_nuevo, 'Editado')
 
         self.assertEqual(user_change_email.dato_anterior, '')
-        self.assertEqual(user_change_email.dato_nuevo, 'nuevo_usuario@gmail.com')
+        self.assertEqual(user_change_email.dato_nuevo, 'usaurio_editado@gmail.com')
+
+    def test_cambio_username_and_login(self):
+        self.authenticate_user()
+
+        url = reverse('editar_perfil')
+                
+        nuevos_datos = {
+            'username':'usuario_editado',
+            'first_name': '',
+            'last_name': '',
+            'email': 'usaurio_editado@gmail.com',
+        }
+
+        self.client.post(url, nuevos_datos)
+        
+        self.user.refresh_from_db()
+        user_change_username = UserChange.objects.get(usuario=self.user, campo_modificado='username')
+        
+        self.assertEqual(user_change_username.dato_anterior, 'usuario_original')
+        self.assertEqual(user_change_username.dato_nuevo, 'usuario_editado')
+
+
+        login_datos_correctos = {'username': 'usuario_editado', 'password': 'user12345'}
+        response = self.client.post('/authentication/login/', login_datos_correctos)
+        self.assertEqual(response.status_code, 200)
+
+        login_datos_erroneos = {'username': 'usuario_original', 'password': 'user12345'}
+        response = self.client.post('/authentication/login/', login_datos_erroneos)
+        self.assertEqual(response.status_code, 400)
 
 class DeleteAccountViewTest(TestCase):
     def setUp(self):

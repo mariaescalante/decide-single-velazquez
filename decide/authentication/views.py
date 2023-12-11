@@ -77,7 +77,10 @@ class Custom_loginView(LoginView):
         # ...
         
         if request.POST :
-            usuario = CustomUser.objects.get(username=request.POST.get("username"))
+            try:
+                usuario = CustomUser.objects.get(username=request.POST.get("username"))
+            except:
+                return redirect("login2")
             if not usuario.is_active:
                 # La cuenta está bloqueada.
 
