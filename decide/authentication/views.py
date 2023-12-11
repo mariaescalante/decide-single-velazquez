@@ -363,22 +363,17 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'password_change_success.html'
-
+    
+@login_required
 def confirmar_borrar_cuenta(request):
     return render(request, 'confirmar_borrar_cuenta.html')
 
 @login_required
 def borrar_cuenta(request):
     if request.method == 'POST':
-        # Puedes agregar lógica adicional aquí, por ejemplo, verificar la contraseña actual
-
-        # Eliminar la cuenta
         request.user.delete()
 
-        # Desconectar al usuario después de eliminar la cuenta
         logout(request)
 
         messages.success(request, 'Tu cuenta ha sido eliminada correctamente.')
-        return redirect('borrar_cuenta')
-
-    return redirect('confirmar_eliminar_cuenta')
+        return redirect('login2')
