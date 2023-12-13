@@ -23,7 +23,7 @@ from django.utils.decorators import method_decorator
 from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm, EditarPerfilForm
 from .serializers import UserSerializer
-from .models import CustomUser, UserChange
+from .models import CustomUser, UserChange, ActividadInicioSesion
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
@@ -83,13 +83,13 @@ class Custom_loginView(LoginView):
                 return redirect("login2")
             if not usuario.is_active:
                 # La cuenta está bloqueada.
-
+                
                 user_failed_login_attempts = 0
                 return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
 
             elif user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
                 # El límite de intentos fallidos se ha alcanzado.
-                
+                         
                 usuario = CustomUser.objects.get(username=request.POST.get("username"))
                 CustomUser.block_account(usuario)
                 
@@ -98,18 +98,27 @@ class Custom_loginView(LoginView):
                 # El usuario no existe o la contraseña es incorrecta.
                 if(not check_password(request.POST.get("password"), usuario.password) and usuario.username in usernames):
                     user_failed_login_attempts += 1
+                    
+                    ActividadInicioSesion.objects.create(usuario=usuario, exito=False)
+                    
                     return render(request, "registration/login.html", { 'form': AuthenticationForm})
                 
                 elif not check_password(request.POST.get("password"), usuario.password):
                     usernames.append(usuario.username)
                     user_failed_login_attempts = 0
                     user_failed_login_attempts += 1
+                    
+                    ActividadInicioSesion.objects.create(usuario=usuario, exito=False)
+                    
                     return render(request, "registration/login.html", { 'form': AuthenticationForm})
                 else:
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
                     send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
+                    
+                    ActividadInicioSesion.objects.create(usuario=usuario)
+                    
                     if(usuario.secret):
                         return redirect("comprobarqr", user_id=usuario.id)
 
@@ -366,3 +375,10 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'password_change_success.html'
+
+
+@login_required
+def actividad(request):
+    actividades = ActividadInicioSesion.objects.filter(usuario=request.user).order_by('-fecha')
+
+    return render(request, 'actividad.html', {'actividades': actividades})

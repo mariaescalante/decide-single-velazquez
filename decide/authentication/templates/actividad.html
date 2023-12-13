@@ -1,0 +1,31 @@
+<title>{% block title %}Actividad inicio de sesión{% endblock %}</title>
+
+{% block content %}
+
+    <div class="content-section">
+        <h1>Actividad inicio de sesión</h1>
+
+            <fieldset class="form-group">
+            <ul style="list-style: none;">
+                {% for actividad in actividades %}
+                    <li>
+                        {% if actividad.exito %}
+                        ✅
+                        {% else %}
+                        ❌
+                        {% endif %}
+                        {{ actividad.fecha }}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            </fieldset>
+            <div class="form-group">
+                <a href="/authentication/dashboard/">Volver al dashboard</a>      
+            </div> 
+            <div>
+
+    </div>      
+
+  
+{% endblock content %}
