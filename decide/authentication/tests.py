@@ -771,7 +771,7 @@ class ActividadInicioSesionTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         actividades = response.context['actividades']
-        self.assertEqual(actividades.count(), 2)
+        self.assertEqual(actividades.paginator.count, 2)
     
     def test_anon_vista_actividad(self):
         ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
@@ -780,3 +780,53 @@ class ActividadInicioSesionTest(TestCase):
         response = self.client.get(reverse('actividad'))
 
         self.assertEqual(response.status_code, 302)
+    
+    def test_paginacion_actividad_sin_pagina(self):
+        self.authenticate_user()
+        
+        url = reverse('actividad') # + '?page=2'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 1)
+        self.assertContains(response, 'Página 1 de', status_code=200)
+    
+    def test_paginacion_actividad_con_numero_valido(self):
+        self.authenticate_user()
+        
+        url = reverse('actividad')  + '?page=1'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 1)
+        self.assertContains(response, 'Página 1 de', status_code=200)
+        
+    
+    def test_paginacion_actividad_pagina_vacia(self):
+        self.authenticate_user()
+        
+        for i in range(10):
+            ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
+            ActividadInicioSesion.objects.create(usuario=self.user, exito=False)
+            
+        url = reverse('actividad')  + '?page=30'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 4)
+        self.assertContains(response, 'Página 4 de', status_code=200)
+        
+        url = reverse('actividad')  + '?page=-2'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 4)
+        self.assertContains(response, 'Página 4 de', status_code=200)
