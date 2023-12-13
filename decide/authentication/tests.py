@@ -4,7 +4,7 @@ from django.http import HttpRequest
 import pytz
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
-from authentication.models import CustomUser, UserChange
+from authentication.models import ActividadInicioSesion, CustomUser, UserChange
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 import time
@@ -727,3 +727,56 @@ class RegistroCambiosTest(TestCase):
         login_datos_erroneos = {'username': 'usuario_original', 'password': 'user12345'}
         response = self.client.post('/authentication/login/', login_datos_erroneos)
         self.assertEqual(response.status_code, 400)
+
+
+class ActividadInicioSesionTest(TestCase):
+    
+    def setUp(self):
+        self.user = CustomUser(username='test_user')
+        self.user.set_password('user12345')
+        self.user.save()
+        
+    def authenticate_user(self):
+        self.client.force_login(self.user)
+        
+    def test_positive_login(self):
+        data = {'username': 'test_user', 'password': 'user12345'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+
+        self.assertEqual(response.status_code, 302)
+
+        ultima_actividad = ActividadInicioSesion.objects.filter(usuario=self.user).latest('fecha')
+
+        self.assertTrue(ultima_actividad.exito)
+
+
+    def test_negative_login(self):
+        data = {'username': 'test_user', 'password': 'fallido'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+
+        self.assertEqual(response.status_code, 200)
+
+        ultima_actividad = ActividadInicioSesion.objects.filter(usuario=self.user).latest('fecha')
+
+        self.assertFalse(ultima_actividad.exito)
+        
+    def test_authenticated_vista_actividad(self):
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=False)
+        
+        self.authenticate_user()
+
+        response = self.client.get(reverse('actividad'))
+
+        self.assertEqual(response.status_code, 200)
+
+        actividades = response.context['actividades']
+        self.assertEqual(actividades.count(), 2)
+    
+    def test_anon_vista_actividad(self):
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=False)
+
+        response = self.client.get(reverse('actividad'))
+
+        self.assertEqual(response.status_code, 302)
