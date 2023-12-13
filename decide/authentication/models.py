@@ -39,3 +39,11 @@ class UserChange(models.Model):
     dato_nuevo = models.CharField(max_length=255, blank=True, null=True)
     campo_modificado = models.CharField(max_length=255, blank=True, null=True)
     
+
+class ActividadInicioSesion(models.Model):
+    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    exito = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f'{self.usuario.username} - {self.fecha} - exito: {self.exito}'
