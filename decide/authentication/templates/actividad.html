@@ -1,0 +1,72 @@
+<title>{% block title %}Actividad inicio de sesión{% endblock %}</title>
+
+{% block content %}
+
+<style>
+    a.button {
+        display: inline-block;
+        padding: 5px 10px;
+        font-size: 16px;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+        color: #333;
+        margin: 10px 0;
+    }
+
+    a.button:hover {
+        background-color: #e0e0e0;
+    }
+</style>
+
+
+<div class="content-section">
+    <h1>Actividad inicio de sesión</h1>
+
+        <fieldset class="form-group">
+        <ul style="list-style: none;">
+            {% for actividad in actividades %}
+                <li>
+                    {% if actividad.exito %}
+                    ✅
+                    {% else %}
+                    ❌
+                    {% endif %}
+                    {{ actividad.fecha }}
+                </li>
+            {% endfor %}
+        </ul>
+
+        </fieldset>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if actividades.has_previous %}
+                    <a class="button" href="?page=1">&laquo; primera</a>
+                    <a class="button" href="?page={{ actividades.previous_page_number }}">anterior</a>
+                {% endif %}
+
+                <span class="current">
+                    Página {{ actividades.number }} de {{ actividades.paginator.num_pages }}.
+                </span>
+
+                {% if actividades.has_next %}
+                    <a class="button" href="?page={{ actividades.next_page_number }}">siguiente</a>
+                    <a class="button" href="?page={{ actividades.paginator.num_pages }}">última &raquo;</a>
+                {% endif %}
+            </span>
+            
+        </div>
+
+        <div class="form-group">
+            <a href="/authentication/dashboard/">Volver al dashboard</a>      
+        </div> 
+        <div>
+
+</div>
+
+  
+{% endblock content %}
