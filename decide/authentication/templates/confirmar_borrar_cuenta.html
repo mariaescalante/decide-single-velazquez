@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Eliminación de Cuenta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        button, a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        button {
+            background-color: #ff3333; 
+        }
+
+        a {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h2>¿Estás seguro de que quieres eliminar tu cuenta?</h2>
+    <form method="post" action="{% url 'borrar_cuenta' %}">
+        {% csrf_token %}
+        <button type="submit">Sí, eliminar mi cuenta</button>
+        <a href="{{ request.META.HTTP_REFERER }}">Cancelar</a>
+    </form>
+</body>
+</html>

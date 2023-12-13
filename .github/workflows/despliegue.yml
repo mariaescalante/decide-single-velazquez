@@ -2,7 +2,9 @@ name: Python application
 
 on:
   push:
-
+    branches:
+      - master
+      - feature/workflow
 
 jobs:
   build:
@@ -14,7 +16,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:11.18-bullseye
+        image: postgres:14.9-alpine
         env:
           POSTGRES_USER: decide
           POSTGRES_PASSWORD: decide
@@ -62,20 +64,18 @@ jobs:
         coverage run --branch --source=. ./manage.py test --keepdb 
         coverage xml 
 
-    - name: Check commit message format
+    - name: Login to Docker Hub
+      run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Build the Docker image
       run: |
-        if [ "${{ github.event_name }}" == "push" ]; then
-        COMMIT_MESSAGE=$(git log --format="%s" -n 1 ${{ github.sha }})
-        PATTERN="^(feat:|fix:|docs:|style:|refactor:|test:|[A-Z][a-z]*:)"
-        
-        if [[ ! "$COMMIT_MESSAGE" =~ "Merge pull request" ]]; then
-          if [[ ! "$COMMIT_MESSAGE" =~ $PATTERN ]]; then
-            echo "Error: El mensaje de commit '$COMMIT_MESSAGE' no sigue el formato esperado."
-            exit 1
-          fi
-        else
-          echo "Skipping commit message verification for pull request merge commit."
-        fi
-        else
-          echo "Skipping commit message verification for pull request."
-        fi
+        cd docker
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest .
+
+    - name: Push to Docker Hub
+      run: |
+        cd docker
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
+
+
+
