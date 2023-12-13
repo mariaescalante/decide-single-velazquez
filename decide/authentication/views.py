@@ -45,6 +45,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from utils.datetimes import get_datetime_now_formatted
 from utils.email import send_email_login_notification
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -380,5 +381,19 @@ class CustomPasswordChangeDoneView(PasswordChangeDoneView):
 @login_required
 def actividad(request):
     actividades = ActividadInicioSesion.objects.filter(usuario=request.user).order_by('-fecha')
+    
+    ELEMENTS_PER_PAGE = 5
+    
+    paginator = Paginator(actividades, ELEMENTS_PER_PAGE)  # Muestra 10 actividades por página
+    page = request.GET.get('page')
 
-    return render(request, 'actividad.html', {'actividades': actividades})
+    try:
+        actividades_pagina = paginator.page(page)
+    except PageNotAnInteger:
+        # Si la página no es un número entero, muestra la primera página
+        actividades_pagina = paginator.page(1)
+    except EmptyPage:
+        # Si la página está fuera de rango (por ejemplo, 9999), muestra la última página
+        actividades_pagina = paginator.page(paginator.num_pages)
+
+    return render(request, 'actividad.html', {'actividades': actividades_pagina})
