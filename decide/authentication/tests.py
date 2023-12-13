@@ -728,6 +728,52 @@ class RegistroCambiosTest(TestCase):
         response = self.client.post('/authentication/login/', login_datos_erroneos)
         self.assertEqual(response.status_code, 400)
 
+class DeleteAccountViewTest(TestCase):
+    def setUp(self):
+        self.user = CustomUser(username='testuser')
+        self.user.set_password('testpassword')
+        self.user.save()
+        self.RESTRINGED_VIEW = '/authentication/login2/?next=/authentication/confirmar_borrar_cuenta/'
+
+    def authenticate_user(self):
+        self.client.force_login(self.user)
+
+    def test_delete_account_view(self):
+        self.authenticate_user()
+        url = reverse('confirmar_borrar_cuenta')
+        url2 = reverse('borrar_cuenta')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '¿Estás seguro de que quieres eliminar tu cuenta?')
+
+        response = self.client.post(url2)
+
+        self.assertEqual(response.status_code, 302)  
+        self.assertRedirects(response, reverse('login2'))
+        self.assertEqual(CustomUser.objects.count(), 0)
+
+    def test_cancel_delete_account_view(self):
+        self.authenticate_user()
+        url = reverse('confirmar_borrar_cuenta')
+        url2 = reverse('borrar_cuenta')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '¿Estás seguro de que quieres eliminar tu cuenta?')
+
+        self.assertEqual(CustomUser.objects.count(), 1)
+
+    def test_delete_account_without_login(self):
+        url = reverse('confirmar_borrar_cuenta')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.RESTRINGED_VIEW)
+        self.assertTrue(self.user.is_authenticated)
 
 class ActividadInicioSesionTest(TestCase):
     
