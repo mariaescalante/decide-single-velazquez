@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
     secret = models.CharField(max_length=255, blank=True, null=True)
     token = models.CharField(max_length=255, blank=True, null=True)
     last_password_change = models.DateTimeField(null=True, blank=True)
+    terms_accepted = models.BooleanField(default=False)
     
     def save(self, *args, **kwargs):
         if not self.pk:

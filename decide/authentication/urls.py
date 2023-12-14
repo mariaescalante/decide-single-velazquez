@@ -26,6 +26,7 @@ urlpatterns = [
     path('2faquit/<int:user_id>/', quitardobleautenticacion, name='password_reset_complete2'),
     path('password-change2/', CustomPasswordChangeView.as_view(), name='password_change2'),
     path('password-change2/done/', CustomPasswordChangeDoneView.as_view(), name='password_change_success2'),
+    path('terms/', terms_and_conditions, name='terms_and_conditions'),
     path('confirmar_borrar_cuenta/', confirmar_borrar_cuenta, name='confirmar_borrar_cuenta'),
     path('borrar_cuenta/', borrar_cuenta, name='borrar_cuenta'),
     path('actividad/', actividad, name="actividad")

@@ -381,7 +381,8 @@ class RegistroEmailTest(TestCase):
         data = {
             'email': 'usuariodeprueba@gmail.com',
             'password1': 'pruebapass123',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data)
 
@@ -394,12 +395,31 @@ class RegistroEmailTest(TestCase):
         self.assertEqual(user_created.email,data['email'])
         self.assertEqual(user_created.first_name,'')
         self.assertEqual(user_created.last_name,'')
+    
+    def test_registro_email_no_accepted_terms(self):
+        data = {
+            'email': 'usuariodeprueba@gmail.com',
+            'password1': 'pruebapass123',
+            'password2': 'pruebapass123',
+            'accepted_terms': False
+        }
+        response = self.client.post('/authentication/register_email/', data)
 
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            user_created = CustomUser.objects.get(email='usuariodeprueba@gmail.com')
+            self.fail("El usuario no se deberia de crear.")
+        except CustomUser.DoesNotExist:
+            pass
+    
+    
     def test_registro_email_bad_email(self):
         data = {
             'email': 'BadEmail',
             'password1': 'pruebapass123',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data)
 
@@ -415,7 +435,8 @@ class RegistroEmailTest(TestCase):
         data_password2_empty = {
             'email': 'emailPruebaPassword2@gmail.com',
             'password1': 'pruebapass123',
-            'password2': ''
+            'password2': '',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_password2_empty)
 
@@ -430,7 +451,8 @@ class RegistroEmailTest(TestCase):
         data_password1_empty = {
             'email': 'emailPruebaPassword1@gmail.com',
             'password1': '',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_password1_empty)
 
@@ -445,7 +467,8 @@ class RegistroEmailTest(TestCase):
         data_distinct_passwords = {
             'email': 'emailPruebaDistinct@gmail.com',
             'password1': 'pruebapass456',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_distinct_passwords)
 
@@ -460,7 +483,8 @@ class RegistroEmailTest(TestCase):
         data_simple_passwords = {
             'email': 'emailPruebaSimple@gmail.com',
             'password1': 'emailPrueba',
-            'password2': 'emailPrueba'
+            'password2': 'emailPrueba',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_simple_passwords)
 
@@ -476,7 +500,8 @@ class RegistroEmailTest(TestCase):
         data = {
             'email': 'usuarioNuevo@gmail.com',
             'password1': 'pruebapass123',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data)
         user_created = CustomUser.objects.get(email='usuarioNuevo@gmail.com')
@@ -488,7 +513,6 @@ class RegistroEmailTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
-
         
 class CertLoginViewTest(TestCase):
 
