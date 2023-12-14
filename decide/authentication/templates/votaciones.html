@@ -1,0 +1,7 @@
+{% block content %}
+
+    {% for votacion in votaciones %}
+        votacion: <a href="/authentication/votar/{{ votacion.voting_id }}/" >Vota aqui </a><br>
+    {% endfor %}
+
+{% endblock %}

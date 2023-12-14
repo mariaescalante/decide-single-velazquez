@@ -1,0 +1,14 @@
+{% block content %}
+
+    votacion.question = {{ votacion.question }}
+</br>
+<form action="/authentication/votar/{{ votacion_id }}/" method="POST" >
+    {% csrf_token %}
+    {% for opcion in opciones %}
+</br>
+    <input type="radio" name="seleccionado" value="{{ opcion.number }}"> {{ opcion.option }}<br>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary">Votar</button>
+</form>
+{% endblock %}

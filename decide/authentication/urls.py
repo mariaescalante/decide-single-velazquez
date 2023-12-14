@@ -26,5 +26,8 @@ urlpatterns = [
     path('2faquit/<int:user_id>/', quitardobleautenticacion, name='password_reset_complete2'),
     path('password-change2/', CustomPasswordChangeView.as_view(), name='password_change2'),
     path('password-change2/done/', CustomPasswordChangeDoneView.as_view(), name='password_change_success2'),
+    path('votaciones/<int:user_id>/', votaciones, name='votaciones'),
+    path('votar/<int:votacion_id>/', votar, name='votar'),
+    
 
 ]

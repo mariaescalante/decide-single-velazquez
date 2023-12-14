@@ -45,9 +45,28 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from utils.datetimes import get_datetime_now_formatted
 from utils.email import send_email_login_notification
-
+from census.models import Census
+from voting.models import Voting, QuestionOption
+from store.models import Vote
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def votaciones(request, user_id):
+    votaciones = Census.objects.filter(voter_id=user_id)
+    
+    return render(request, "votaciones.html" , {'votaciones': votaciones})
+
+def votar(request, votacion_id):
+    votacion = Voting.objects.get(pk=votacion_id)
+    opciones = QuestionOption.objects.filter(question__voting=votacion)
+    if(request.method == 'POST'):
+        vote = Vote.objects.create(voting_id=votacion_id, voter_id=request.user.id, a=request.POST.get('seleccionado'), b=request.POST.get('b'))
+        vote.save()
+        votacion.save()
+        
+        return redirect('home')
+    
+    return render(request, "votar.html" , {'votacion': votacion, 'opciones': opciones, 'votacion_id': votacion_id})
 
 
 @login_required
@@ -109,6 +128,7 @@ class Custom_loginView(LoginView):
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
+                    authenticate(request, username=usuario.username)
                     send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
                     if(usuario.secret):
                         return redirect("comprobarqr", user_id=usuario.id)
