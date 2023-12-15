@@ -298,6 +298,7 @@ class CertLoginView(LoginView):
                     
             authenticate(request, username=user.username)
             login(request, user)
+            ActividadInicioSesion.objects.create(usuario=user, exito=True)
 
             return redirect(self.success_url)
         
