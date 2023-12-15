@@ -4,6 +4,11 @@ from .models import CustomUser
 from django.utils import timezone
 
 class CustomUserCreationForm(UserCreationForm):
+    accepted_terms = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(),
+        label='He leído y acepto los términos y condiciones'
+    )    
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if CustomUser.objects.filter(username__iexact=username).exists():
@@ -12,15 +17,19 @@ class CustomUserCreationForm(UserCreationForm):
     
     class Meta(UserCreationForm.Meta):
         model = CustomUser
-        fields = ('username', 'password1', 'password2')
-    
+        fields = ('username', 'password1', 'password2', 'accepted_terms') 
   
 class CustomUserCreationFormEmail(UserCreationForm):
+    accepted_terms = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(),
+        label='He leído y acepto los términos y condiciones'
+    )    
     email = forms.EmailField(required=True)
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'password1', 'password2')
+        fields = ('email', 'password1', 'password2', 'accepted_terms')
 
     def save(self, commit=True):
         user = super().save(commit=False)

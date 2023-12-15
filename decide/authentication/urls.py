@@ -28,6 +28,9 @@ urlpatterns = [
     path('password-change2/done/', CustomPasswordChangeDoneView.as_view(), name='password_change_success2'),
     path('votaciones/<int:user_id>/', votaciones, name='votaciones'),
     path('votar/<int:votacion_id>/', votar, name='votar'),
-    
+    path('terms/', terms_and_conditions, name='terms_and_conditions'),
+    path('confirmar_borrar_cuenta/', confirmar_borrar_cuenta, name='confirmar_borrar_cuenta'),
+    path('borrar_cuenta/', borrar_cuenta, name='borrar_cuenta'),
+    path('actividad/', actividad, name="actividad")
 
 ]

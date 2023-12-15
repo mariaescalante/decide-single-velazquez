@@ -12,6 +12,7 @@ href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
 {% endblock %}
 {% block content %}
 
+
 <div class="content-section">
     <h1 style="text-align: center;">Dashboard</h1>
     <form method="POST" style="max-width: 600px; margin: 0 auto; text-align: left;">
@@ -28,6 +29,18 @@ href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
             <div class="form-group">
                 <a href="/authentication/cuenta">Ver mi perfil</a>
             </div>
+
+            <div class="form-group">
+                <a href="/authentication/actividad">Ver actividad de inicio sesión</a>
+            </div>
+
+            </fieldset>
+            <div class="form-group">
+                <a id="logout" href="/authentication/logout2/">Logout</a>      
+        
+            </div> 
+            <a href="/authentication/confirmar_borrar_cuenta">Eliminar mi cuenta</a>
+
             <div>
                 <a href="/authentication/votaciones/{{ user.id }}">Votaciones</a>
             </div>
