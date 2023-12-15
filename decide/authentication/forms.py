@@ -45,7 +45,11 @@ class CustomUserCreationFormEmail(UserCreationForm):
         return email  
 
 class CustomAuthenticationForm(forms.Form):
-    cert_file = forms.FileField(label='Certificado')
+    cert_file = forms.FileField(
+        label='Certificado',
+        help_text="El certificado debe tener extensión .p12",
+        widget=forms.ClearableFileInput(attrs={'accept': '.p12'})
+    )
     password = forms.CharField(label='Contraseña', widget=forms.PasswordInput, required=True)
 
 class CustomPasswordChangeForm(PasswordChangeForm):
