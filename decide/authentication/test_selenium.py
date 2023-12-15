@@ -31,7 +31,7 @@ class AdminTestCase(StaticLiveServerTestCase):
             os.remove(os.path.join(BASE_DIR,'authentication/static/noadmin.png'))
             
         options = webdriver.ChromeOptions()
-        options.headless = True  #Necesario
+        options.headless = False  #Necesario
         
 
         self.driver = webdriver.Chrome(options=options)
