@@ -50,12 +50,11 @@ from voting.models import Voting, QuestionOption
 from store.models import Vote
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+@login_required
 def votaciones(request, user_id):
     votaciones = Census.objects.filter(voter_id=user_id)
-    
     return render(request, "votaciones.html" , {'votaciones': votaciones})
-
+@login_required
 def votar(request, votacion_id):
     votacion = Voting.objects.get(pk=votacion_id)
     opciones = QuestionOption.objects.filter(question__voting=votacion)
