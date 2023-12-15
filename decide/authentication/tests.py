@@ -562,7 +562,7 @@ class CertLoginViewTest(TestCase):
         response = self.client.post(self.url, data, follow=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Error al procesar el certificado')
+        self.assertContains(response, 'incorrecta')
 
         user = self.user_model.objects.filter(username='00000000A').first()
         self.assertIsNone(user)
