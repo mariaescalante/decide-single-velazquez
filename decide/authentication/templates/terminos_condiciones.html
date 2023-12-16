@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+
 <title>{% block title %}Términos y Condiciones de Uso{% endblock %}</title>
 
 {% block content %}
@@ -15,29 +17,29 @@
 
 
 </style>
-<div class="terms-container">
-    <h1>Términos y Condiciones de Uso</h1>
+<div class="container w-50 mt-5">
+    <h1 class="text-center mb-5">Términos y Condiciones de Uso</h1>
 
-    <p><strong>1. Aceptación de los Términos y Condiciones</strong></p>
+    <h3 class="mt-4 mb-2">1. Aceptación de los Términos y Condiciones</h3>
     <p>Al acceder y utilizar la aplicación web decide-single-velazquez, aceptas cumplir con estos términos y condiciones de uso. Si no estás de acuerdo con alguno de estos términos, te pedimos que no utilices la aplicación.</p>
 
-    <p><strong>2. Uso Autorizado</strong></p>
+    <h3 class="mt-4 mb-2">2. Uso Autorizado</h3>
     <p>Solo los usuarios autorizados tienen permiso para acceder y utilizar los servicios proporcionados por decide-single-velazquez. El acceso no autorizado está estrictamente prohibido.</p>
 
-    <p><strong>3. Responsabilidad del Usuario</strong></p>
+    <h3 class="mt-4 mb-2">3. Responsabilidad del Usuario</h3>
     <p>Los usuarios son responsables de mantener la confidencialidad de sus credenciales de acceso. Cualquier actividad realizada bajo sus credenciales será responsabilidad exclusiva del usuario.</p>
 
-    <p><strong>4. Privacidad y Seguridad de los Datos</strong></p>
+    <h3 class="mt-4 mb-2">4. Privacidad y Seguridad de los Datos</h3>
     <p>La privacidad de los usuarios es una prioridad para decide-single-velazquez. La información personal recopilada se manejará de acuerdo con nuestra Política de Privacidad.</p>
 
-    <p><strong>5. Uso Responsable</strong></p>
+    <h3 class="mt-4 mb-2">5. Uso Responsable</h3>
     <p>Los usuarios se comprometen a utilizar la aplicación de manera responsable y ética. No se permite el uso indebido, la alteración, ni la destrucción de datos.</p>
 
-    <p><strong>6. Modificaciones de los Términos</strong></p>
+    <h3 class="mt-4 mb-2">6. Modificaciones de los Términos</h3>
     <p>[Nombre de tu Aplicación] se reserva el derecho de modificar estos términos y condiciones en cualquier momento. Se notificarán los cambios significativos a los usuarios.</p>
 
-    <p>Para cualquier pregunta o inquietud, comunícate con nosotros a <a href="mailto:decidevelazquez@gmail.com">decidevelazquez@gmail.com</a>.</p>
-    <button onclick="goBack()">Volver Atrás</button>
+    <p>Para cualquier pregunta o inquietud, comunícate con nosotros a <a class="link-primary" href="mailto:decidevelazquez@gmail.com">decidevelazquez@gmail.com</a>.</p>
+    <button class="btn btn-primary" onclick="goBack()">Volver</button>
 
     <script>
         function goBack() {
