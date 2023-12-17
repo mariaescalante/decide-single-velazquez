@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        pyversion: ['3.8','3.9']
+        pyversion: ['3.9']
 
     runs-on: ubuntu-latest
 
@@ -68,10 +68,7 @@ jobs:
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
     
     - name: Render deploy
-      env:
-        deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
       run: |
-        echo "$deploy_url"
-        curl "$deploy_url"
+        curl https://api.render.com/deploy/srv-clusip6g1b2c73cbagug?key=YYHmyVhR3Ko
 
 
