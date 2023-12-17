@@ -187,13 +187,17 @@ def registro(request):
     if request.method == 'POST':
         user_creation_form = CustomUserCreationForm(data=request.POST)
 
-        if user_creation_form.is_valid():
-            user = user_creation_form.save()
+        try: 
+            if user_creation_form.is_valid():
+                user = user_creation_form.save()
 
-            login(request, user)
-            return redirect('home')
-        else:
-            data['mensaje'] = 'Ha habido un error en el formulario'
+                login(request, user)
+                return redirect('home')
+            else:
+                data['mensaje'] = 'Ha habido un error en el formulario'
+        except:
+            user_creation_form.add_error(None, f'Ha habido un error en el formulario')
+            
     return render(request, "registro.html", data)
 
 def registro_email(request):
@@ -348,21 +352,25 @@ def editar_perfil(request):
 
     if request.method == 'POST':
         form = EditarPerfilForm(request.POST, instance=user)
-        if form.is_valid():
-            old_user = CustomUser.objects.get(pk=user.pk)
-            form.save()
-            new_user = CustomUser.objects.get(pk=user.pk)
+        try:
+            if form.is_valid():
+                old_user = CustomUser.objects.get(pk=user.pk)
+                form.save()
+                new_user = CustomUser.objects.get(pk=user.pk)
 
-            for field in form.changed_data:
-                old_value = getattr(old_user, field)
-                new_value = getattr(new_user, field)
-                UserChange.objects.create(
-                    usuario=user,
-                    campo_modificado=field,
-                    dato_anterior=str(old_value),
-                    dato_nuevo=str(new_value)
-                )
-            return redirect('cuenta')
+                for field in form.changed_data:
+                    old_value = getattr(old_user, field)
+                    new_value = getattr(new_user, field)
+                    UserChange.objects.create(
+                        usuario=user,
+                        campo_modificado=field,
+                        dato_anterior=str(old_value),
+                        dato_nuevo=str(new_value)
+                    )
+                return redirect('cuenta')
+        except:
+            form.add_error(None, f'Ha habido un error en el formulario')
+            
     else:
         form = EditarPerfilForm(instance=user)
 

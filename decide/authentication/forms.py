@@ -13,7 +13,7 @@ class CustomUserCreationForm(UserCreationForm):
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if CustomUser.objects.filter(username__iexact=username).exists():
-            self.add_error('username', forms.ValidationError('This username is already taken. Please choose another.'))
+            raise forms.ValidationError('This username is already taken. Please choose another.')
         return username
     
     def __init__(self, *args, **kwargs):
@@ -50,7 +50,7 @@ class CustomUserCreationFormEmail(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if CustomUser.objects.filter(email__iexact=email).exists():
-            self.add_error('email', forms.ValidationError('This email is already taken. Please choose another.'))
+            raise forms.ValidationError('This email is already taken. Please choose another.')
         return email  
 
 class CustomAuthenticationForm(forms.Form):
@@ -90,7 +90,7 @@ class EditarPerfilForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
 
         if not email or '@' not in email:
-            self.add_error('email', forms.ValidationError("Por favor, introduce un email válido."))
+            raise forms.ValidationError("Por favor, introduce un email válido.")
         
         return email
 
