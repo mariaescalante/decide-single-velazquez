@@ -320,11 +320,16 @@ class CertLoginView(LoginView):
                     
             authenticate(request, username=user.username)
             login(request, user)
+            ActividadInicioSesion.objects.create(usuario=user, exito=True)
 
             return redirect(self.success_url)
         
         except Exception as e:
-            form.add_error(None, f'Error al procesar el certificado: {str(e)}')
+            if 'deserialize' in str(e):
+                form.add_error(None, f'Formato incorrecto del certificado (debe ser *.p12)')
+            if 'password' in str(e):
+                form.add_error(None, f'Contraseña incorrecta')
+                
 
         return render(request, self.template_name, {'form': form})
     

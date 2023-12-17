@@ -19,3 +19,4 @@ qrcode
 dj-database-url == 2.1.0
 whitenoise==6.5.0
 gunicorn==21.2.0
+django-bootstrap-v5
