@@ -1,16 +1,15 @@
-name: Python application
+name: CD
 
 on:
   push:
     branches:
       - master
-      - feature/workflow
 
 jobs:
   build:
     strategy:
       matrix:
-        pyversion: ['3.8','3.9']
+        pyversion: ['3.9']
 
     runs-on: ubuntu-latest
 
@@ -40,11 +39,6 @@ jobs:
       run: sudo apt-get install libpq-dev
     - name: Wait for VNC to be ready
       run: sleep 10
-    - name: dependencies for selenium
-      run: |
-        sudo apt-get install python3-tk
-        sudo apt-get install gnome-screenshot
-        sudo apt-get install -y chromium-browser
   
    
     - name: Install dependencies and config
@@ -58,11 +52,6 @@ jobs:
         cd decide
         python manage.py makemigrations
         python manage.py migrate
-    - name: Run tests
-      run: |
-        cd decide
-        coverage run --branch --source=. ./manage.py test --keepdb 
-        coverage xml 
 
     - name: Login to Docker Hub
       run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -76,6 +65,9 @@ jobs:
       run: |
         cd docker
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
+    
+    - name: Render deploy
+      run: |
+        curl https://api.render.com/deploy/srv-clusip6g1b2c73cbagug?key=YYHmyVhR3Ko
 
-
-
+        
