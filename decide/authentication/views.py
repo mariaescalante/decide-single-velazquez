@@ -76,6 +76,8 @@ def votar(request, votacion_id):
 def home(request):
         data = {
         'user': request.user}
+        
+        print("#"*30,data)
 
         return render(request, "home.html", data)
 
