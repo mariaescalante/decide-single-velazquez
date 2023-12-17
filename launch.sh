@@ -8,4 +8,5 @@ rm -rf authentication/migrations/__pycache__/
 ./manage.py collectstatic --noinput
 ./manage.py makemigrations
 ./manage.py migrate
-gunicorn -w 5 decide.wsgi:application --timeout=500 --log-file=-
+./manage.py createsuperuser --noinput
+gunicorn -w 5 decide.wsgi:application --timeout=500
