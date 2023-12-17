@@ -75,7 +75,6 @@ def votar(request, votacion_id):
 @login_required
 def home(request):
         data = {
-        'form': CustomUserCreationForm(),
         'user': request.user}
 
         return render(request, "home.html", data)
