@@ -69,5 +69,3 @@ jobs:
     - name: Render deploy
       run: |
         curl https://api.render.com/deploy/srv-clusip6g1b2c73cbagug?key=YYHmyVhR3Ko
-
-
