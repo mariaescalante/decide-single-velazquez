@@ -76,6 +76,11 @@ jobs:
       run: |
         cd docker
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/decide-single-velazquez:latest
-
+    
+    - name:
+      env:
+        deploy_url: ${{secrets.RENDER_DEPLOY_HOOK_URL}}
+      run: |
+        curl "$deploy_url"
 
 
