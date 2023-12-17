@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_swagger',
     'gateway',
+    
+    'bootstrap5',
 ]
 
 AUTH_USER_MODEL = 'authentication.CustomUser'

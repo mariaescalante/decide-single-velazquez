@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+<title>{% block title %}Votar{% endblock %}</title>
+{% load i18n static %}
+
+{% load crispy_forms_tags %}
+{% block extrahead %}
+
+<link type="text/css" rel="stylesheet"
+href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+<link href="https://getbootstrap.com/docs/5.2/assets/css/docs.css" rel="stylesheet">
+<link type="text/css" rel="stylesheet" href="{% static "/booth/style.css" %}" />
+{% endblock %}
+{% block content %}
+<div class="content-section" style="max-width: 600px; margin: 0 auto; text-align: center;">
+</br>
+    La pregunta para la votación es:<h1> {{ votacion.question }}</h1>
+</br>
+<form action="/authentication/votar/{{ votacion_id }}/" method="POST" >
+    {% csrf_token %}
+    {% for opcion in opciones %}
+</br>
+    <input type="radio" name="seleccionado" value="{{ opcion.number }}"> {{ opcion.option }}<br>
+    {% endfor %}
+</br>
+    <button type="submit" class="btn btn-primary">Votar</button>
+</form>
+</div>  
+{% endblock %}

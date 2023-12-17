@@ -1,30 +1,29 @@
-
-
+{% extends "base.html" %}
 <title>{% block title %}2FA{% endblock %}</title>
+{% load i18n static %}
 
 {% load crispy_forms_tags %}
+{% block extrahead %}
+    <link type="text/css" rel="stylesheet"
+          href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://getbootstrap.com/docs/5.2/assets/css/docs.css" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="{% static "/booth/style.css" %}" />
+{% endblock %}
 {% block content %}
-<body>
-    <div class="content-section">
-        <h1> Dashboard</h1>
-        <form method="POST">
+    <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+
+        <h1>Dashboard</h1>
+        <form method="POST" style="text-align: center;">
             {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Activar autenticación de doble factor</legend>
-                {{ form | crispy }}
-            </fieldset>
-            <div>
-            <div class="form-group">
+            <div style="text-align: left;">
                 <h1>Activar Autenticación de Dos Factores (2FA)</h1>
                 <p>Escanea el siguiente código QR en tu aplicación autenticadora:</p>
                 {% load static %}
                 <img src={{camino}}/>
                
-                <p>o ingresa la siguiente clave manualmente: </p><p id="codigo" >{{ qr_text }}</p>
+                <p>O ingresa la siguiente clave manualmente: </p><p id="codigo">{{ qr_text }}</p>
             </div>
+            <button id="aceptar" class="btn btn-outline-info" type="submit">Aceptar</button>
         </form>
-        <button id="aceptar" class="btn btn-outline-info" type="submit">Aceptar</button>
-        
-    </div>             
-</body>
+    </div>
 {% endblock content %}

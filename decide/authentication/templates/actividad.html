@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+<title>{% block title %}Actividad inicio de sesión{% endblock %}</title>
+
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+          <h2 class="d-inline-block m-0">Actividad inicio de sesión</h2>
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            {% for actividad in actividades %}
+              {% if actividad.exito %}
+                <li class="list-group-item list-group-item-success">{{ actividad.fecha }}</li>
+              {% else %}
+                <li class="list-group-item list-group-item-danger">{{ actividad.fecha }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+
+          <div class="pagination mt-3">
+              <span class="step-links">
+                  {% if actividades.has_previous %}
+                      <a class="btn btn-secondary" href="?page=1">&laquo; primera</a>
+                      <a class="btn btn-secondary" href="?page={{ actividades.previous_page_number }}">anterior</a>
+                  {% endif %}
+
+                  <span class="current">
+                      Página {{ actividades.number }} de {{ actividades.paginator.num_pages }}.
+                  </span>
+
+                  {% if actividades.has_next %}
+                      <a class="btn btn-secondary" href="?page={{ actividades.next_page_number }}">siguiente</a>
+                      <a class="btn btn-secondary" href="?page={{ actividades.paginator.num_pages }}">última &raquo;</a>
+                  {% endif %}
+              </span>
+              
+          </div>
+
+
+              <a class="btn btn-primary align-self-start mt-3" href="{% url "home" %}">Volver</a>     
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,35 +1,55 @@
+{% extends "base.html" %}
 <title>{% block title %}Dashboard{% endblock %}</title>
+{% load i18n static %}
 
 {% load crispy_forms_tags %}
+{% block extrahead %}
+
+<link type="text/css" rel="stylesheet"
+href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+<link href="https://getbootstrap.com/docs/5.2/assets/css/docs.css" rel="stylesheet">
+<link type="text/css" rel="stylesheet" href="{% static "/booth/style.css" %}" />
+{% endblock %}
 {% block content %}
 
-    <div class="content-section">
-        <h1> Dashboard</h1>
-        <form method="POST">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Activar autenticación de doble factor</legend>
-                <div class="form-group">
-                    {% if request.user.secret == None %}
-                    <a id="enlace" href="/authentication/2fa/{{ user.id }}">Doble factor</a>
-                    {% else%}
-                    <a href="/authentication/2faquit/{{ user.id }}">Desactivar Doblefactor</a>
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    <a href="/authentication/cuenta">Ver mi perfil</a>
-                </div>
+
+<div class="content-section">
+    <h1 style="text-align: center;">Dashboard</h1>
+    <form method="POST" style="max-width: 600px; margin: 0 auto; text-align: left;">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Activar autenticación de doble factor</legend>
+            <div class="form-group">
+                {% if request.user.secret == None %}
+                <a id="enlace" href="/authentication/2fa/{{ user.id }}">Doble factor</a>
+                {% else%}
+                <a href="/authentication/2faquit/{{ user.id }}">Desactivar Doblefactor</a>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <a href="/authentication/cuenta">Ver mi perfil</a>
+            </div>
+
+            <div class="form-group">
+                <a href="/authentication/actividad">Ver actividad de inicio sesión</a>
+            </div>
+
             </fieldset>
             <div class="form-group">
                 <a id="logout" href="/authentication/logout2/">Logout</a>      
         
             </div> 
+            <a href="/authentication/confirmar_borrar_cuenta">Eliminar mi cuenta</a>
+
             <div>
-            
-        </form>
-         {{mensaje}}
-         {{datos}}
-    </div>      
+                <a href="/authentication/votaciones/{{ user.id }}">Votaciones</a>
+            </div>
+        </fieldset>
+
+    </form>
+    <p style="text-align: center;">{{ mensaje }}</p>
+    <div style="text-align: center;">{{ datos }}</div>
+</div>
 
   
 {% endblock content %}

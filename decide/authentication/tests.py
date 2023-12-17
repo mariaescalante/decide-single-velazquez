@@ -4,7 +4,7 @@ from django.http import HttpRequest
 import pytz
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
-from authentication.models import CustomUser, UserChange
+from authentication.models import ActividadInicioSesion, CustomUser, UserChange
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 import time
@@ -381,7 +381,8 @@ class RegistroEmailTest(TestCase):
         data = {
             'email': 'usuariodeprueba@gmail.com',
             'password1': 'pruebapass123',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data)
 
@@ -394,12 +395,31 @@ class RegistroEmailTest(TestCase):
         self.assertEqual(user_created.email,data['email'])
         self.assertEqual(user_created.first_name,'')
         self.assertEqual(user_created.last_name,'')
+    
+    def test_registro_email_no_accepted_terms(self):
+        data = {
+            'email': 'usuariodeprueba@gmail.com',
+            'password1': 'pruebapass123',
+            'password2': 'pruebapass123',
+            'accepted_terms': False
+        }
+        response = self.client.post('/authentication/register_email/', data)
 
+        self.assertEqual(response.status_code, 200)
+        
+        try:
+            user_created = CustomUser.objects.get(email='usuariodeprueba@gmail.com')
+            self.fail("El usuario no se deberia de crear.")
+        except CustomUser.DoesNotExist:
+            pass
+    
+    
     def test_registro_email_bad_email(self):
         data = {
             'email': 'BadEmail',
             'password1': 'pruebapass123',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data)
 
@@ -415,7 +435,8 @@ class RegistroEmailTest(TestCase):
         data_password2_empty = {
             'email': 'emailPruebaPassword2@gmail.com',
             'password1': 'pruebapass123',
-            'password2': ''
+            'password2': '',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_password2_empty)
 
@@ -430,7 +451,8 @@ class RegistroEmailTest(TestCase):
         data_password1_empty = {
             'email': 'emailPruebaPassword1@gmail.com',
             'password1': '',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_password1_empty)
 
@@ -445,7 +467,8 @@ class RegistroEmailTest(TestCase):
         data_distinct_passwords = {
             'email': 'emailPruebaDistinct@gmail.com',
             'password1': 'pruebapass456',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_distinct_passwords)
 
@@ -460,7 +483,8 @@ class RegistroEmailTest(TestCase):
         data_simple_passwords = {
             'email': 'emailPruebaSimple@gmail.com',
             'password1': 'emailPrueba',
-            'password2': 'emailPrueba'
+            'password2': 'emailPrueba',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data_simple_passwords)
 
@@ -476,7 +500,8 @@ class RegistroEmailTest(TestCase):
         data = {
             'email': 'usuarioNuevo@gmail.com',
             'password1': 'pruebapass123',
-            'password2': 'pruebapass123'
+            'password2': 'pruebapass123',
+            'accepted_terms': True
         }
         response = self.client.post('/authentication/register_email/', data)
         user_created = CustomUser.objects.get(email='usuarioNuevo@gmail.com')
@@ -488,7 +513,6 @@ class RegistroEmailTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ha habido un error en el formulario')
-
         
 class CertLoginViewTest(TestCase):
 
@@ -538,7 +562,7 @@ class CertLoginViewTest(TestCase):
         response = self.client.post(self.url, data, follow=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Error al procesar el certificado')
+        self.assertContains(response, 'incorrecta')
 
         user = self.user_model.objects.filter(username='00000000A').first()
         self.assertIsNone(user)
@@ -727,3 +751,152 @@ class RegistroCambiosTest(TestCase):
         login_datos_erroneos = {'username': 'usuario_original', 'password': 'user12345'}
         response = self.client.post('/authentication/login/', login_datos_erroneos)
         self.assertEqual(response.status_code, 400)
+
+class DeleteAccountViewTest(TestCase):
+    def setUp(self):
+        self.user = CustomUser(username='testuser')
+        self.user.set_password('testpassword')
+        self.user.save()
+        self.RESTRINGED_VIEW = '/authentication/login2/?next=/authentication/confirmar_borrar_cuenta/'
+
+    def authenticate_user(self):
+        self.client.force_login(self.user)
+
+    def test_delete_account_view(self):
+        self.authenticate_user()
+        url = reverse('confirmar_borrar_cuenta')
+        url2 = reverse('borrar_cuenta')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '¿Estás seguro de que quieres eliminar tu cuenta?')
+
+        response = self.client.post(url2)
+
+        self.assertEqual(response.status_code, 302)  
+        self.assertRedirects(response, reverse('login2'))
+        self.assertEqual(CustomUser.objects.count(), 0)
+
+    def test_cancel_delete_account_view(self):
+        self.authenticate_user()
+        url = reverse('confirmar_borrar_cuenta')
+        url2 = reverse('borrar_cuenta')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '¿Estás seguro de que quieres eliminar tu cuenta?')
+
+        self.assertEqual(CustomUser.objects.count(), 1)
+
+    def test_delete_account_without_login(self):
+        url = reverse('confirmar_borrar_cuenta')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.RESTRINGED_VIEW)
+        self.assertTrue(self.user.is_authenticated)
+
+class ActividadInicioSesionTest(TestCase):
+    
+    def setUp(self):
+        self.user = CustomUser(username='test_user')
+        self.user.set_password('user12345')
+        self.user.save()
+        
+    def authenticate_user(self):
+        self.client.force_login(self.user)
+        
+    def test_positive_login(self):
+        data = {'username': 'test_user', 'password': 'user12345'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+
+        self.assertEqual(response.status_code, 302)
+
+        ultima_actividad = ActividadInicioSesion.objects.filter(usuario=self.user).latest('fecha')
+
+        self.assertTrue(ultima_actividad.exito)
+
+
+    def test_negative_login(self):
+        data = {'username': 'test_user', 'password': 'fallido'}
+        response = self.client.post('/authentication/login2/', data, format='json')
+
+        self.assertEqual(response.status_code, 200)
+
+        ultima_actividad = ActividadInicioSesion.objects.filter(usuario=self.user).latest('fecha')
+
+        self.assertFalse(ultima_actividad.exito)
+        
+    def test_authenticated_vista_actividad(self):
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=False)
+        
+        self.authenticate_user()
+
+        response = self.client.get(reverse('actividad'))
+
+        self.assertEqual(response.status_code, 200)
+
+        actividades = response.context['actividades']
+        self.assertEqual(actividades.paginator.count, 2)
+    
+    def test_anon_vista_actividad(self):
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
+        ActividadInicioSesion.objects.create(usuario=self.user, exito=False)
+
+        response = self.client.get(reverse('actividad'))
+
+        self.assertEqual(response.status_code, 302)
+    
+    def test_paginacion_actividad_sin_pagina(self):
+        self.authenticate_user()
+        
+        url = reverse('actividad') # + '?page=2'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 1)
+        self.assertContains(response, 'Página 1 de', status_code=200)
+    
+    def test_paginacion_actividad_con_numero_valido(self):
+        self.authenticate_user()
+        
+        url = reverse('actividad')  + '?page=1'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 1)
+        self.assertContains(response, 'Página 1 de', status_code=200)
+        
+    
+    def test_paginacion_actividad_pagina_vacia(self):
+        self.authenticate_user()
+        
+        for i in range(10):
+            ActividadInicioSesion.objects.create(usuario=self.user, exito=True)
+            ActividadInicioSesion.objects.create(usuario=self.user, exito=False)
+            
+        url = reverse('actividad')  + '?page=30'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 4)
+        self.assertContains(response, 'Página 4 de', status_code=200)
+        
+        url = reverse('actividad')  + '?page=-2'
+        
+        response = self.client.get(url)
+        contexto = response.context
+        self.assertIn('actividades', contexto)
+        actividades_pagina = contexto['actividades']
+        self.assertEqual(actividades_pagina.number, 4)
+        self.assertContains(response, 'Página 4 de', status_code=200)

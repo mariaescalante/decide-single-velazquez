@@ -23,7 +23,7 @@ from django.utils.decorators import method_decorator
 from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .forms import CustomUserCreationForm, CustomUserCreationFormEmail, CustomPasswordChangeForm, CustomResetPasswordForm, EditarPerfilForm
 from .serializers import UserSerializer
-from .models import CustomUser, UserChange
+from .models import CustomUser, UserChange, ActividadInicioSesion
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import resolve_url
@@ -45,9 +45,31 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from utils.datetimes import get_datetime_now_formatted
 from utils.email import send_email_login_notification
+from census.models import Census
+from voting.models import Voting, QuestionOption
+from store.models import Vote
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+@login_required
+def votaciones(request, user_id):
+    votaciones = Census.objects.filter(voter_id=user_id)
+    return render(request, "votaciones.html" , {'votaciones': votaciones})
+@login_required
+def votar(request, votacion_id):
+    votacion = Voting.objects.get(pk=votacion_id)
+    opciones = QuestionOption.objects.filter(question__voting=votacion)
+    if(request.method == 'POST'):
+        vote = Vote.objects.create(voting_id=votacion_id, voter_id=request.user.id, a=request.POST.get('seleccionado'), b=request.POST.get('b'))
+        vote.save()
+        votacion.save()
+        
+        return redirect('home')
+    
+    return render(request, "votar.html" , {'votacion': votacion, 'opciones': opciones, 'votacion_id': votacion_id})
 
 
 @login_required
@@ -83,13 +105,13 @@ class Custom_loginView(LoginView):
                 return redirect("login2")
             if not usuario.is_active:
                 # La cuenta está bloqueada.
-
+                
                 user_failed_login_attempts = 0
                 return render(request, "registro.html", {'form': CustomUserCreationForm ,'mensaje': 'Cuenta bloqueada'})
 
             elif user_failed_login_attempts >= AUTH_MAX_FAILED_LOGIN_ATTEMPTS and usuario.username in usernames:
                 # El límite de intentos fallidos se ha alcanzado.
-                
+                         
                 usuario = CustomUser.objects.get(username=request.POST.get("username"))
                 CustomUser.block_account(usuario)
                 
@@ -98,18 +120,28 @@ class Custom_loginView(LoginView):
                 # El usuario no existe o la contraseña es incorrecta.
                 if(not check_password(request.POST.get("password"), usuario.password) and usuario.username in usernames):
                     user_failed_login_attempts += 1
+                    
+                    ActividadInicioSesion.objects.create(usuario=usuario, exito=False)
+                    
                     return render(request, "registration/login.html", { 'form': AuthenticationForm})
                 
                 elif not check_password(request.POST.get("password"), usuario.password):
                     usernames.append(usuario.username)
                     user_failed_login_attempts = 0
                     user_failed_login_attempts += 1
+                    
+                    ActividadInicioSesion.objects.create(usuario=usuario, exito=False)
+                    
                     return render(request, "registration/login.html", { 'form': AuthenticationForm})
                 else:
                     # El usuario ha iniciado sesión correctamente.
                     user_failed_login_attempts = 0
                     login(request, usuario)
+                    authenticate(request, username=usuario.username)
                     send_email_login_notification(request, 'email_notificacion.html', 'Nuevo inicio de sesión')
+                    
+                    ActividadInicioSesion.objects.create(usuario=usuario)
+                    
                     if(usuario.secret):
                         return redirect("comprobarqr", user_id=usuario.id)
 
@@ -288,11 +320,16 @@ class CertLoginView(LoginView):
                     
             authenticate(request, username=user.username)
             login(request, user)
+            ActividadInicioSesion.objects.create(usuario=user, exito=True)
 
             return redirect(self.success_url)
         
         except Exception as e:
-            form.add_error(None, f'Error al procesar el certificado: {str(e)}')
+            if 'deserialize' in str(e):
+                form.add_error(None, f'Formato incorrecto del certificado (debe ser *.p12)')
+            if 'password' in str(e):
+                form.add_error(None, f'Contraseña incorrecta')
+                
 
         return render(request, self.template_name, {'form': form})
     
@@ -366,3 +403,43 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'password_change_success.html'
+
+
+def terms_and_conditions(request):
+    # Lógica para los términos y condiciones
+    return render(request, 'terminos_condiciones.html')
+
+    
+@login_required
+def confirmar_borrar_cuenta(request):
+    return render(request, 'confirmar_borrar_cuenta.html')
+
+@login_required
+def borrar_cuenta(request):
+    if request.method == 'POST':
+        request.user.delete()
+
+        logout(request)
+
+        messages.success(request, 'Tu cuenta ha sido eliminada correctamente.')
+        return redirect('login2')
+
+@login_required
+def actividad(request):
+    actividades = ActividadInicioSesion.objects.filter(usuario=request.user).order_by('-fecha')
+    
+    ELEMENTS_PER_PAGE = 5
+    
+    paginator = Paginator(actividades, ELEMENTS_PER_PAGE)  # Muestra 10 actividades por página
+    page = request.GET.get('page')
+
+    try:
+        actividades_pagina = paginator.page(page)
+    except PageNotAnInteger:
+        # Si la página no es un número entero, muestra la primera página
+        actividades_pagina = paginator.page(1)
+    except EmptyPage:
+        # Si la página está fuera de rango (por ejemplo, 9999), muestra la última página
+        actividades_pagina = paginator.page(paginator.num_pages)
+
+    return render(request, 'actividad.html', {'actividades': actividades_pagina})
