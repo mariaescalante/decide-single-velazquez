@@ -145,16 +145,19 @@ class Custom_loginView(LoginView):
                     if(usuario.secret):
                         return redirect("comprobarqr", user_id=usuario.id)
 
+                    last_change = usuario.last_password_change
+                    last_change = last_change.astimezone(timezone.get_current_timezone()) if last_change else None
+
+                    X = timedelta(minutes=10080)  # 7 dias
+                    if last_change and (timezone.now() - last_change) >= X:
+                        return redirect('password_change2')
 
                     return redirect("home")
             
-                
         return render(request, "registration/login.html", { 'form': AuthenticationForm})
     
     def get_success_url(self):
         user = self.request.user
-
-        
         
         # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
