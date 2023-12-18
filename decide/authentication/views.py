@@ -75,7 +75,6 @@ def votar(request, votacion_id):
 @login_required
 def home(request):
         data = {
-        'form': CustomUserCreationForm(),
         'user': request.user}
 
         return render(request, "home.html", data)
@@ -145,16 +144,19 @@ class Custom_loginView(LoginView):
                     if(usuario.secret):
                         return redirect("comprobarqr", user_id=usuario.id)
 
+                    last_change = usuario.last_password_change
+                    last_change = last_change.astimezone(timezone.get_current_timezone()) if last_change else None
+
+                    X = timedelta(minutes=10080)  # 7 dias
+                    if last_change and (timezone.now() - last_change) >= X:
+                        return redirect('password_change2')
 
                     return redirect("home")
             
-                
         return render(request, "registration/login.html", { 'form': AuthenticationForm})
     
     def get_success_url(self):
         user = self.request.user
-
-        
         
         # Verificar si el usuario tiene un dato llamado 'secret'
         if hasattr(user, 'secret') and user.secret:
@@ -187,13 +189,17 @@ def registro(request):
     if request.method == 'POST':
         user_creation_form = CustomUserCreationForm(data=request.POST)
 
-        if user_creation_form.is_valid():
-            user = user_creation_form.save()
+        try: 
+            if user_creation_form.is_valid():
+                user = user_creation_form.save()
 
-            login(request, user)
-            return redirect('home')
-        else:
-            data['mensaje'] = 'Ha habido un error en el formulario'
+                login(request, user)
+                return redirect('home')
+            else:
+                data['mensaje'] = 'Ha habido un error en el formulario'
+        except:
+            user_creation_form.add_error(None, f'Ha habido un error en el formulario')
+            
     return render(request, "registro.html", data)
 
 def registro_email(request):
@@ -348,21 +354,25 @@ def editar_perfil(request):
 
     if request.method == 'POST':
         form = EditarPerfilForm(request.POST, instance=user)
-        if form.is_valid():
-            old_user = CustomUser.objects.get(pk=user.pk)
-            form.save()
-            new_user = CustomUser.objects.get(pk=user.pk)
+        try:
+            if form.is_valid():
+                old_user = CustomUser.objects.get(pk=user.pk)
+                form.save()
+                new_user = CustomUser.objects.get(pk=user.pk)
 
-            for field in form.changed_data:
-                old_value = getattr(old_user, field)
-                new_value = getattr(new_user, field)
-                UserChange.objects.create(
-                    usuario=user,
-                    campo_modificado=field,
-                    dato_anterior=str(old_value),
-                    dato_nuevo=str(new_value)
-                )
-            return redirect('cuenta')
+                for field in form.changed_data:
+                    old_value = getattr(old_user, field)
+                    new_value = getattr(new_user, field)
+                    UserChange.objects.create(
+                        usuario=user,
+                        campo_modificado=field,
+                        dato_anterior=str(old_value),
+                        dato_nuevo=str(new_value)
+                    )
+                return redirect('cuenta')
+        except:
+            form.add_error(None, f'Ha habido un error en el formulario')
+            
     else:
         form = EditarPerfilForm(instance=user)
 
